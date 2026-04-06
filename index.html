@@ -24,21 +24,24 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#1e293b
 .btn-sm{padding:8px 14px;font-size:.85rem;width:auto}
 .btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-row .btn{flex:1;min-width:140px}
 /* Modals */
-.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:#fff;border-radius:var(--radius);padding:32px;max-width:420px;width:100%;text-align:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:#fff;border-radius:var(--radius);padding:32px;max-width:440px;width:100%;text-align:center}
 .modal h2{color:var(--topbar);margin-bottom:8px;font-size:1.1rem}
 .modal p{color:var(--gray);font-size:.85rem;margin-bottom:20px}
-.modal input{width:100%;padding:14px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:1.1rem;text-align:center;letter-spacing:4px}
-.modal input:focus{outline:none;border-color:var(--blue)}
+.modal input[type=password]{width:100%;padding:14px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:1.1rem;text-align:center;letter-spacing:4px}
+.modal input[type=password]:focus{outline:none;border-color:var(--blue)}
 .modal .btn{margin-top:16px}
 .modal .error{color:var(--red);font-size:.85rem;margin-top:8px;display:none}
-/* Unit select modal */
-.unit-modal{text-align:left;max-width:460px}
-.unit-modal h2{text-align:center}
-.unit-modal p{text-align:center}
-.unit-modal select{width:100%;padding:12px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:.95rem;color:#1e293b;background:#fff;appearance:auto}
-.unit-modal select:focus{outline:none;border-color:var(--blue)}
-.unit-modal .unit-addr{font-size:.78rem;color:var(--gray);margin-top:8px;min-height:40px;padding:8px 12px;background:#f8fafc;border-radius:8px;line-height:1.4}
+/* Ident modal */
+.ident-modal{text-align:left}
+.ident-modal h2{text-align:center}
+.ident-modal p{text-align:center}
+.ident-modal label{display:block;font-size:.82rem;color:var(--gray);margin-bottom:4px;margin-top:14px;font-weight:600}
+.ident-modal label:first-of-type{margin-top:0}
+.ident-modal input,.ident-modal select{width:100%;padding:11px 12px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:.95rem;color:#1e293b}
+.ident-modal input:focus,.ident-modal select:focus{outline:none;border-color:var(--blue)}
+.ident-modal .unit-addr{font-size:.75rem;color:var(--gray);margin-top:6px;min-height:32px;padding:6px 10px;background:#f8fafc;border-radius:8px;line-height:1.3}
+.ident-modal .ident-err{color:var(--red);font-size:.82rem;margin-top:10px;display:none;text-align:center}
 /* Review modal */
 .review-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
 .review-modal{background:#fff;border-radius:var(--radius);max-width:560px;width:100%;margin:20px auto;box-shadow:0 12px 40px rgba(0,0,0,.3)}
@@ -95,25 +98,31 @@ td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
 </head>
 <body>
 
-<!-- 1) PASSWORD MODAL -->
+<!-- 1) SENHA -->
 <div class="modal-overlay" id="modalSenha">
 <div class="modal">
 <h2>🔐 Acesso Restrito</h2>
 <p>Digite a senha para acessar o sistema</p>
-<input type="password" id="inputSenha" inputmode="numeric" maxlength="20" autofocus>
+<input type="password" id="inputSenha" maxlength="30" autofocus>
 <div class="error" id="senhaError">Senha incorreta. Tente novamente.</div>
 <button class="btn btn-blue" onclick="tentarSenha()">Entrar</button>
 </div>
 </div>
 
-<!-- 2) UNIT SELECT MODAL -->
-<div class="modal-overlay hidden" id="modalUnidade">
-<div class="modal unit-modal">
-<h2>📍 Selecione a unidade</h2>
-<p>Qual delegacia está registrando a apreensão?</p>
+<!-- 2) IDENTIFICAÇÃO + UNIDADE -->
+<div class="modal-overlay hidden" id="modalIdent">
+<div class="modal ident-modal">
+<h2>👤 Identificação</h2>
+<p>Preencha seus dados para gerar relatórios</p>
+<label>Nome completo *</label>
+<input type="text" id="idNome" placeholder="Ex: João da Silva">
+<label>Matrícula funcional *</label>
+<input type="text" id="idMat" placeholder="Ex: 12345">
+<label>Unidade *</label>
 <select id="selUnidade" onchange="mostrarEndereco()"></select>
 <div class="unit-addr" id="unitAddr"></div>
-<button class="btn btn-blue" onclick="confirmarUnidade()">Confirmar</button>
+<div class="ident-err" id="identErr">Preencha nome e matrícula.</div>
+<button class="btn btn-blue" onclick="confirmarIdent()">Continuar</button>
 </div>
 </div>
 
@@ -196,8 +205,10 @@ td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
 </div>
 
 <script>
-var EK='G0SPuj+0vjkaVliIRRm2tnbqNCo3EVW+6szzyhcv5gfWawQ71r8lfPOMIoXAKvb88Gs2KARHPye3mLu9YEiqEyZ62zIgzh6ErT7kFnFelUGN5hw=';
+var EK='bIb49+uJAN8X9VvgHtv8RUBvrW+JDMct0Do1OKT5i/8Hr6h4A3UIJhfC0Y0cakxHrp/Nr9Azb+o/Ltra1rlmr/9AESEV7B7vW7nq+U8qIxTk69s=';
+var LOG_URL='https://script.google.com/macros/s/AKfycbxux67U4_5bMBsxJPdOkGsnkthuZfsYzdCoETIBqFYFkrqeYKRX1SNbIEilanIxXyj6/exec';
 var API_KEY='',fotos=[],cedulas=[];
+var usuario={nome:'',matricula:''};
 
 /* ===== DELEGACIAS ===== */
 var UNIDADES=[
@@ -219,41 +230,40 @@ var UNIDADES=[
 {sigla:'DPF/PDE/SP',nome:'Delegacia de Polícia Federal em Presidente Prudente',end:'Av. Luis Cezário, nº 380, Jd. Colina, Presidente Prudente/SP — CEP 19061-145'},
 {sigla:'OUTROS',nome:'Outra unidade',end:''}
 ];
-var unidadeSel=UNIDADES[0]; // default Bauru
+var unidadeSel=UNIDADES[0];
 
 /* ===== CRYPTO ===== */
 async function deriveKey(p,s){var e=new TextEncoder();var k=await crypto.subtle.importKey('raw',e.encode(p),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:s,iterations:100000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['decrypt']);}
 async function decrypt(p){try{var r=atob(EK);var b=new Uint8Array(r.length);for(var i=0;i<r.length;i++)b[i]=r.charCodeAt(i);var k=await deriveKey(p,b.slice(0,16));var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},k,b.slice(28));return new TextDecoder().decode(pt);}catch(e){return null;}}
-async function tentarSenha(){var p=document.getElementById('inputSenha').value.trim();if(!p)return;var k=await decrypt(p);if(k){API_KEY=k;document.getElementById('modalSenha').classList.add('hidden');abrirSelecaoUnidade();}else{document.getElementById('senhaError').style.display='block';document.getElementById('inputSenha').value='';document.getElementById('inputSenha').focus();}}
+async function tentarSenha(){var p=document.getElementById('inputSenha').value.trim();if(!p)return;var k=await decrypt(p);if(k){API_KEY=k;document.getElementById('modalSenha').classList.add('hidden');abrirIdent();}else{document.getElementById('senhaError').style.display='block';document.getElementById('inputSenha').value='';document.getElementById('inputSenha').focus();}}
 document.getElementById('inputSenha').addEventListener('keydown',function(e){if(e.key==='Enter')tentarSenha();});
 
-/* ===== UNIT SELECTION ===== */
-function abrirSelecaoUnidade(){
+/* ===== IDENTIFICAÇÃO + UNIDADE ===== */
+function abrirIdent(){
 var sel=document.getElementById('selUnidade');
 sel.innerHTML='';
 UNIDADES.forEach(function(u,i){
-var o=document.createElement('option');o.value=i;o.textContent=u.sigla+' — '+u.nome.replace('Delegacia de Polícia Federal em ','').replace('Superintendência Regional em ','SR ');
+var o=document.createElement('option');o.value=i;
+o.textContent=u.sigla==='OUTROS'?'OUTROS':u.sigla+' — '+u.nome.replace('Delegacia de Polícia Federal em ','').replace('Superintendência Regional em ','SR ');
 sel.appendChild(o);
 });
-sel.value=0; // Bauru default
-mostrarEndereco();
-document.getElementById('modalUnidade').classList.remove('hidden');
+sel.value=0;mostrarEndereco();
+document.getElementById('modalIdent').classList.remove('hidden');
+document.getElementById('idNome').focus();
 }
 function mostrarEndereco(){
-var i=+document.getElementById('selUnidade').value;
-var u=UNIDADES[i];
-var addr=document.getElementById('unitAddr');
-if(u.sigla==='OUTROS'){addr.textContent='A unidade será identificada apenas como "Polícia Federal".';}
-else{addr.textContent=u.end||'';}
+var u=UNIDADES[+document.getElementById('selUnidade').value];
+document.getElementById('unitAddr').textContent=u.sigla==='OUTROS'?'Identificada apenas como "Polícia Federal".':u.end||'';
 }
-function confirmarUnidade(){
-var i=+document.getElementById('selUnidade').value;
-unidadeSel=UNIDADES[i];
-document.getElementById('modalUnidade').classList.add('hidden');
-// Update topbar
+function confirmarIdent(){
+var nome=document.getElementById('idNome').value.trim();
+var mat=document.getElementById('idMat').value.trim();
+if(!nome||!mat){document.getElementById('identErr').style.display='block';return;}
+usuario.nome=nome;usuario.matricula=mat;
+unidadeSel=UNIDADES[+document.getElementById('selUnidade').value];
+document.getElementById('modalIdent').classList.add('hidden');
 var tag=document.getElementById('topUnit');
-if(unidadeSel.sigla==='OUTROS'){tag.textContent='Polícia Federal';} 
-else{tag.textContent=unidadeSel.sigla;}
+tag.textContent=(unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.sigla)+' | '+usuario.nome;
 tag.style.display='inline-block';
 document.getElementById('app').style.display='block';
 }
@@ -288,7 +298,7 @@ function esc(s){var d=document.createElement('div');d.textContent=s;return d.inn
 /* ===== COPY ===== */
 function copiarTabela(){
 var u=unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.sigla;
-var t='CATALOGAÇÃO DE CÉDULAS APREENDIDAS\n'+u+'\nData: '+new Date().toLocaleDateString('pt-BR')+'\n\n#\tValor\t\tSérie\n'+'-'.repeat(50)+'\n';
+var t='CATALOGAÇÃO DE CÉDULAS APREENDIDAS\n'+u+'\nServidor: '+usuario.nome+' — Mat. '+usuario.matricula+'\nData: '+new Date().toLocaleDateString('pt-BR')+'\n\n#\tValor\t\tSérie\n'+'-'.repeat(50)+'\n';
 cedulas.forEach(function(c,i){t+=(i+1)+'\t'+fBRL(c.valor)+'\t\t'+c.serie+'\n';});
 t+='\nRESUMO\nDenom.\t\tQtd\tSubtotal\n'+'-'.repeat(40)+'\n';
 var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
@@ -329,7 +339,24 @@ function fecharReview(){document.getElementById('reviewOverlay').classList.add('
 function confirmarPDF(){
 document.querySelectorAll('.rv').forEach(function(s){cedulas[+s.dataset.i].valor=+s.value;});
 document.querySelectorAll('.rs').forEach(function(inp){cedulas[+inp.dataset.i].serie=inp.value.trim();});
-renderDetalhe();renderResumo();fecharReview();gerarPDF();
+renderDetalhe();renderResumo();fecharReview();
+enviarLog();
+gerarPDF();
+}
+
+/* ===== LOG SILENCIOSO ===== */
+function enviarLog(){
+var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
+var ks=Object.keys(m),tq=0,tv=0;ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;});
+var payload={
+nome:usuario.nome,
+matricula:usuario.matricula,
+unidade:unidadeSel.sigla==='OUTROS'?'OUTROS':unidadeSel.sigla,
+qtdCedulas:tq,
+valorTotal:tv.toFixed(2)
+};
+try{navigator.sendBeacon(LOG_URL,JSON.stringify(payload));}catch(e){
+fetch(LOG_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)}).catch(function(){});}
 }
 
 /* ===== PDF ===== */
@@ -338,24 +365,23 @@ var now=new Date(),ds=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString
 var uNome=unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.nome;
 var uEnd=unidadeSel.end||'';
 var uSigla=unidadeSel.sigla==='OUTROS'?'':unidadeSel.sigla;
-
 var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
 var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;});
 var dr='';cedulas.forEach(function(c,i){dr+='<tr><td style="text-align:center">'+(i+1)+'</td><td style="text-align:right">'+fBRL(c.valor)+'</td><td>'+esc(c.serie)+'</td></tr>';});
 var sr='';ks.forEach(function(k){sr+='<tr><td>'+fBRL(+k)+'</td><td style="text-align:center">'+m[k].q+'</td><td style="text-align:right">'+fBRL(m[k].s)+'</td></tr>';});
 var ph='';fotos.forEach(function(f,i){ph+='<div style="display:inline-block;margin:6px;vertical-align:top;text-align:center"><img src="'+f.dataUrl+'" style="max-width:240px;max-height:200px;border:1px solid #ccc;border-radius:4px"><br><small style="color:#666">Foto '+(i+1)+'</small></div>';});
-
 var subLine=uNome+(uSigla?' ('+uSigla+')':'');
 var addrLine=uEnd?'<br><span style="font-size:10px">'+esc(uEnd)+'</span>':'';
 
-var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Cédulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:16px}h2{font-size:13px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total td{font-weight:700;background:#f1f5f9;border-top:2px solid #1e3a5f}.photos{margin-top:12px;page-break-inside:avoid}.footer{margin-top:24px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px}</style></head><body>';
+var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Cédulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total td{font-weight:700;background:#f1f5f9;border-top:2px solid #1e3a5f}.photos{margin-top:12px;page-break-inside:avoid}.footer{margin-top:24px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px}</style></head><body>';
 html+='<h1>CATALOGAÇÃO DE CÉDULAS APREENDIDAS</h1>';
 html+='<p class="sub">'+esc(subLine)+'</p>';
 html+='<p class="sub2">'+addrLine+'<br>'+ds+'</p>';
+html+='<div class="srv">Servidor: <b>'+esc(usuario.nome)+'</b> — Matrícula: <b>'+esc(usuario.matricula)+'</b></div>';
 html+='<h2>Tabela Detalhada</h2><table><thead><tr><th style="width:40px;text-align:center">#</th><th style="width:110px;text-align:right">Valor</th><th>Série</th></tr></thead><tbody>'+dr+'</tbody></table>';
 html+='<h2>Resumo por Denominação</h2><table><thead><tr><th>Denominação</th><th style="text-align:center">Qtd</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>'+sr+'<tr class="total"><td><b>TOTAL</b></td><td style="text-align:center"><b>'+tq+'</b></td><td style="text-align:right"><b>'+fBRL(tv)+'</b></td></tr></tbody></table>';
 html+='<h2>Imagens das Cédulas</h2><div class="photos">'+ph+'</div>';
-html+='<div class="footer">Documento gerado pelo Catalogador de Cédulas — '+esc(subLine)+'<br>Nenhuma imagem armazenada em servidor.</div>';
+html+='<div class="footer">Documento gerado por '+esc(usuario.nome)+' (Mat. '+esc(usuario.matricula)+') — '+esc(subLine)+'<br>Nenhuma imagem armazenada em servidor.</div>';
 html+='<script>window.onload=function(){window.print();}<\/script></body></html>';
 
 var blob=new Blob([html],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);
