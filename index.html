@@ -380,7 +380,7 @@ else al.innerHTML='<div class="alert alert-ok"><span>\u2705</span><span>Todas as
 function lwFinalizarLote(){
 if(lwActiveIdx>=0&&lwActiveIdx<lwFotos.length)lwFotos[lwActiveIdx].confirmada=true;
 lotes[denomAtual.valor].fotos=lwFotos;
-abrirRevisao();
+abrirRevisao(denomAtual.valor);
 }
 
 /* CATALOGO */
@@ -402,15 +402,18 @@ var t=getTotais();document.getElementById('catalogTotal').innerHTML='<div style=
 }
 
 /* REVISAO */
-function abrirRevisao(){document.getElementById('chkAceite').checked=false;toggleBtnFinal();renderRevisao();showScreen('revisao');}
+var revisaoDenom=null;
+function abrirRevisao(denom){revisaoDenom=typeof denom!=='undefined'?denom:null;document.getElementById('chkAceite').checked=false;toggleBtnFinal();renderRevisao();showScreen('revisao');}
 function detalhePorFoto(fotos){
 var lines=[];fotos.forEach(function(f,i){if(!f.confirmada||!f.parcial||!f.parcial.length)return;
 var total=f.parcial.reduce(function(s,c){return s+c.qtd;},0);
 var desc=f.parcial.map(function(c){return esc(c.serie)+' (x'+c.qtd+')';}).join(', ');
 lines.push({label:'Foto '+(i+1)+' ('+total+' c\u00e9d.)',desc:desc});});return lines;}
+function getRevisaoKeys(){if(revisaoDenom!==null)return[String(revisaoDenom)];return Object.keys(lotes).sort(function(a,b){return(+a)-(+b);});}
+function getRevisaoTotais(){var tc=0,tv=0;getRevisaoKeys().forEach(function(v){var l=lotes[v];if(!l)return;var ac=calcAcumulado(l.fotos);ac.forEach(function(c){tc+=c.qtd;tv+=c.qtd*(+v);});});return{cedulas:tc,valor:tv};}
 function renderRevisao(){
 var body=document.getElementById('revisaoBody');body.innerHTML='';
-var keys=Object.keys(lotes).sort(function(a,b){return(+a)-(+b);});
+var keys=getRevisaoKeys();
 keys.forEach(function(v){var lote=lotes[v];var ac=calcAcumulado(lote.fotos);if(!ac.length)return;var d=getDenom(+v);var qLote=ac.reduce(function(s,c){return s+c.qtd;},0);var sub=qLote*(+v);
 var h='<div style="margin-bottom:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="background:'+d.cor+';color:#fff;padding:4px 12px;border-radius:6px;font-weight:800;font-size:.85rem">'+d.label+'</span><span style="font-size:.82rem;color:var(--topbar);font-weight:600">'+qLote+' c\u00e9dula'+(qLote!==1?'s':'')+' \u2014 '+fBRL(sub)+'</span></div><table><thead><tr><th>#</th><th>N\u00ba S\u00e9rie</th><th style="text-align:center">Qtd</th></tr></thead><tbody>';
 ac.forEach(function(c,i){h+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+esc(c.serie)+'</td><td style="text-align:center">'+c.qtd+'</td></tr>';});
@@ -420,7 +423,8 @@ if(det.length){h+='<div style="margin-top:8px;border-left:3px solid #94a3b8;back
 det.forEach(function(d){h+='<div style="font-size:.75rem;color:#475569;margin-bottom:2px"><b>'+d.label+':</b> '+d.desc+'</div>';});
 h+='</div>';}
 h+='</div>';body.innerHTML+=h;});
-var t=getTotais();body.innerHTML+='<div style="border-top:2px solid var(--topbar);padding-top:10px;margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:800;color:var(--topbar)"><span>TOTAL</span><span>'+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor)+'</span></div></div>';
+var t=getRevisaoTotais();var label=revisaoDenom!==null?'TOTAL':'TOTAL GERAL';
+body.innerHTML+='<div style="border-top:2px solid var(--topbar);padding-top:10px;margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:800;color:var(--topbar)"><span>'+label+'</span><span>'+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor)+'</span></div></div>';
 }
 function toggleBtnFinal(){var ok=document.getElementById('chkAceite').checked;document.getElementById('btnGerarPDF').disabled=!ok;document.getElementById('btnGerarDOCX').disabled=!ok;}
 
@@ -431,7 +435,7 @@ function enviarLog(){var t=getTotais();var payload={nome:usuario.nome,matricula:
 function gerarPDF(){
 enviarLog();var now=new Date(),ds=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 var uNome=unidadeSel.sigla==='OUTROS'?'Pol\u00edcia Federal':unidadeSel.nome;var uEnd=unidadeSel.end||'';var uSigla=unidadeSel.sigla==='OUTROS'?'':unidadeSel.sigla;var subLine=uNome+(uSigla?' ('+uSigla+')':'');
-var keys=Object.keys(lotes).sort(function(a,b){return(+a)-(+b);});var sections='';
+var keys=getRevisaoKeys();var sections='';
 keys.forEach(function(v){var lote=lotes[v];var ac=calcAcumulado(lote.fotos);if(!ac.length)return;var d=getDenom(+v);var qLote=ac.reduce(function(s,c){return s+c.qtd;},0);var sub=qLote*(+v);
 sections+='<h2 style="color:'+d.cor+'">'+d.label+' \u2014 '+qLote+' c\u00e9dula'+(qLote!==1?'s':'')+' \u2014 Subtotal: '+fBRL(sub)+'</h2>';
 sections+='<table><thead><tr><th style="width:40px;text-align:center">#</th><th>N\u00ba S\u00e9rie</th><th style="width:80px;text-align:center">Qtd</th></tr></thead><tbody>';
@@ -444,7 +448,7 @@ sections+='</div>';}
 var okFotos=lote.fotos.filter(function(f){return f.confirmada;});
 if(okFotos.length){sections+='<div style="margin:8px 0 16px">';okFotos.forEach(function(f,i){sections+='<div style="display:inline-block;margin:4px;vertical-align:top;text-align:center"><img src="'+f.dataUrl+'" style="max-width:220px;max-height:180px;border:1px solid #ccc;border-radius:4px"><br><small style="color:#666">Foto '+(i+1)+'</small></div>';});sections+='</div>';}
 });
-var t=getTotais();
+var t=getRevisaoTotais();var totalLabel=revisaoDenom!==null?'TOTAL':'TOTAL GERAL';
 var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relat\u00f3rio C\u00e9dulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total-box{margin-top:16px;padding:12px;background:#f1f5f9;border:2px solid #1e3a5f;border-radius:6px;text-align:center;font-size:14px;font-weight:700;color:#1e3a5f}.footer{margin-top:24px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:10px}thead{display:table-header-group}h2{page-break-after:avoid}tr{page-break-inside:avoid}.det-section{margin:10px 0 16px;border-left:3px solid #94a3b8;background:#f8fafc;padding:8px 12px}.det-head{font-size:10px;font-weight:700;color:#64748b;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}.det-note{font-size:7.5px;font-style:italic;color:#94a3b8;margin-bottom:6px}.det-item{font-size:9px;color:#475569;margin-bottom:3px}</style></head><body>';
 html+='<h1>CATALOGA\u00c7\u00c3O DE C\u00c9DULAS APREENDIDAS</h1>';
 html+='<p class="sub">'+esc(subLine)+'</p>';
@@ -452,7 +456,7 @@ if(uEnd)html+='<p class="sub2">'+esc(uEnd)+'</p>';
 html+='<p class="sub2">'+ds+'</p>';
 html+='<div class="srv">Servidor: <b>'+esc(usuario.nome)+'</b> \u2014 Matr\u00edcula: <b>'+esc(usuario.matricula)+'</b></div>';
 html+=sections;
-html+='<div class="total-box">TOTAL GERAL: '+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor)+'</div>';
+html+='<div class="total-box">'+totalLabel+': '+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor)+'</div>';
 html+='<div class="footer">Documento emitido por '+esc(usuario.nome)+' (Mat. '+esc(usuario.matricula)+') ap\u00f3s confer\u00eancia e valida\u00e7\u00e3o dos dados.<br>As informa\u00e7\u00f5es foram revisadas e confirmadas pelo servidor respons\u00e1vel.<br>Nenhuma imagem ou dado foi armazenado em servidor.</div>';
 html+='<scr'+'ipt>window.onload=function(){window.print();}</scr'+'ipt></body></html>';
 var blob=new Blob([html],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);
@@ -465,7 +469,7 @@ async function gerarDOCX(){
 if(!window.docx||!window.saveAs){alert('Aguarde o carregamento completo da p\u00e1gina e tente novamente.');return;}
 enviarLog();var D=window.docx;var now=new Date(),ds=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 var uNome=unidadeSel.sigla==='OUTROS'?'Pol\u00edcia Federal':unidadeSel.nome;var uEnd=unidadeSel.end||'';var uSigla=unidadeSel.sigla==='OUTROS'?'':unidadeSel.sigla;var subLine=uNome+(uSigla?' ('+uSigla+')':'');
-var keys=Object.keys(lotes).sort(function(a,b){return(+a)-(+b);});var ch=[];
+var keys=getRevisaoKeys();var ch=[];
 ch.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'CATALOGA\u00c7\u00c3O DE C\u00c9DULAS APREENDIDAS',bold:true,size:28,font:'Segoe UI'})]}));
 ch.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:40},children:[new D.TextRun({text:subLine,size:20,font:'Segoe UI'})]}));
 if(uEnd)ch.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:40},children:[new D.TextRun({text:uEnd,size:16,color:'666666',font:'Segoe UI'})]}));
@@ -485,12 +489,12 @@ var okFotos=lote.fotos.filter(function(f){return f.confirmada;});
 if(okFotos.length){ch.push(new D.Paragraph({spacing:{before:100,after:40},children:[new D.TextRun({text:'Imagens do lote:',italics:true,size:16,color:'666666',font:'Segoe UI'})]}));
 okFotos.forEach(function(f,fi){try{var b64=f.dataUrl.split(',')[1];var raw=atob(b64);var arr=new Uint8Array(raw.length);for(var j=0;j<raw.length;j++)arr[j]=raw.charCodeAt(j);var mime=f.dataUrl.split(';')[0].split(':')[1]||'image/jpeg';var ext=mime.indexOf('png')>=0?'png':'jpg';ch.push(new D.Paragraph({spacing:{after:80},children:[new D.ImageRun({data:arr,transformation:{width:280,height:210},type:ext}),new D.TextRun({text:'  Foto '+(fi+1),size:14,color:'999999',font:'Segoe UI'})]}));}catch(e){}});}
 });
-var t=getTotais();
-ch.push(new D.Paragraph({spacing:{before:300},border:{top:{style:D.BorderStyle.SINGLE,size:3,color:'1E3A5F'}},alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'TOTAL GERAL: '+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor),bold:true,size:24,font:'Segoe UI',color:'1E3A5F'})]}));
+var t=getRevisaoTotais();var totalLabel=revisaoDenom!==null?'TOTAL':'TOTAL GERAL';
+ch.push(new D.Paragraph({spacing:{before:300},border:{top:{style:D.BorderStyle.SINGLE,size:3,color:'1E3A5F'}},alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:totalLabel+': '+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor),bold:true,size:24,font:'Segoe UI',color:'1E3A5F'})]}));
 ch.push(new D.Paragraph({spacing:{before:400},alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Documento emitido por '+usuario.nome+' (Mat. '+usuario.matricula+') ap\u00f3s confer\u00eancia e valida\u00e7\u00e3o dos dados.',size:14,color:'999999',font:'Segoe UI'})]}));
 ch.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Nenhuma imagem ou dado foi armazenado em servidor.',size:14,color:'999999',font:'Segoe UI'})]}));
 var doc=new D.Document({sections:[{properties:{page:{margin:{top:1000,bottom:1000,left:1000,right:1000}}},children:ch}]});
-try{var blob=await D.Packer.toBlob(doc);saveAs(blob,'Catalogacao_Cedulas_'+now.toISOString().slice(0,10)+'.docx');}catch(err){alert('Erro ao gerar DOCX: '+err.message);}
+try{var fname='Catalogacao_'+(revisaoDenom!==null?'R'+revisaoDenom+'_':'')+now.toISOString().slice(0,10)+'.docx';var blob=await D.Packer.toBlob(doc);saveAs(blob,fname);}catch(err){alert('Erro ao gerar DOCX: '+err.message);}
 }
 
 function novaAnalise(){if(!confirm('Limpar tudo e iniciar nova an\u00e1lise?'))return;lotes={};lwFotos=[];renderHome();showScreen('home');}
