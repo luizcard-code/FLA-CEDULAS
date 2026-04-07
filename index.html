@@ -331,7 +331,7 @@ h+='<td><input type="text" value="'+esc(c.serie)+'" onchange="lwEditParcialSerie
 h+='<td><input type="number" value="'+c.qtd+'" min="1" style="text-align:center;width:50px" onchange="lwEditParcialQtd('+i+',this.value)"></td>';
 h+='<td><button class="del-row" onclick="lwDelParcial('+i+')">\uD83D\uDDD1</button></td></tr>';
 });
-h+='<tr class="tbl-total"><td></td><td style="text-align:right"><b>TOTAL</b></td><td style="text-align:center"><b>'+total+'</b></td><td></td></tr></tbody></table>';
+h+='<tr class="tbl-total"><td></td><td style="text-align:right"><b>TOTAL</b></td><td style="text-align:center"><b id="lwParcialTotal">'+total+'</b></td><td></td></tr></tbody></table>';
 document.getElementById('lwParcialTbl').innerHTML=h;
 var btns='<button class="btn btn-outline btn-sm" onclick="lwReprocessar()">\uD83D\uDD04 Reprocessar</button>';
 btns+='<button class="btn btn-blue btn-sm" onclick="lwSeguir()">\uD83D\uDCF7 Seguir (+foto)</button>';
@@ -340,7 +340,8 @@ btns+='<button class="btn btn-green btn-sm" onclick="lwFinalizarLote()">\u2705 F
 document.getElementById('lwActionBtns').innerHTML=btns;
 }
 function lwEditParcialSerie(i,v){lwFotos[lwActiveIdx].parcial[i].serie=v.trim();}
-function lwEditParcialQtd(i,v){lwFotos[lwActiveIdx].parcial[i].qtd=Math.max(1,parseInt(v)||1);}
+function lwEditParcialQtd(i,v){lwFotos[lwActiveIdx].parcial[i].qtd=Math.max(1,parseInt(v)||1);lwRefreshTotal();}
+function lwRefreshTotal(){var t=lwFotos[lwActiveIdx].parcial.reduce(function(s,c){return s+c.qtd;},0);var el=document.getElementById('lwParcialTotal');if(el)el.textContent=t;lwRenderAlerta();}
 function lwDelParcial(i){lwFotos[lwActiveIdx].parcial.splice(i,1);lwRender();}
 function lwAddManual(){
 if(lwActiveIdx<0)return;var f=lwFotos[lwActiveIdx];
@@ -415,8 +416,8 @@ var h='<div style="margin-bottom:18px"><div style="display:flex;align-items:cent
 ac.forEach(function(c,i){h+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+esc(c.serie)+'</td><td style="text-align:center">'+c.qtd+'</td></tr>';});
 h+='</tbody></table>';
 var det=detalhePorFoto(lote.fotos);
-if(det.length){h+='<div style="margin-top:6px"><div style="font-size:.75rem;font-style:italic;color:var(--gray);margin-bottom:4px">Detalhamento por foto <span style="font-weight:400">(desdobramento do acumulado acima)</span></div>';
-det.forEach(function(d){h+='<div style="font-size:.78rem;color:#334155;margin-bottom:2px"><b>'+d.label+':</b> '+d.desc+'</div>';});
+if(det.length){h+='<div style="margin-top:8px;border-left:3px solid #94a3b8;background:#f8fafc;padding:8px 12px;border-radius:0 6px 6px 0"><div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Rastreabilidade por foto</div><div style="font-size:.65rem;font-style:italic;color:#94a3b8;margin-bottom:6px">Desdobramento do acumulado acima.</div>';
+det.forEach(function(d){h+='<div style="font-size:.75rem;color:#475569;margin-bottom:2px"><b>'+d.label+':</b> '+d.desc+'</div>';});
 h+='</div>';}
 h+='</div>';body.innerHTML+=h;});
 var t=getTotais();body.innerHTML+='<div style="border-top:2px solid var(--topbar);padding-top:10px;margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:800;color:var(--topbar)"><span>TOTAL</span><span>'+t.cedulas+' c\u00e9dulas \u2014 '+fBRL(t.valor)+'</span></div></div>';
@@ -437,14 +438,14 @@ sections+='<table><thead><tr><th style="width:40px;text-align:center">#</th><th>
 ac.forEach(function(c,i){sections+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+esc(c.serie)+'</td><td style="text-align:center">'+c.qtd+'</td></tr>';});
 sections+='</tbody></table>';
 var det=detalhePorFoto(lote.fotos);
-if(det.length){sections+='<div class="det-section"><div class="det-head">Detalhamento por foto</div><div class="det-note">As informa\u00e7\u00f5es abaixo s\u00e3o um desdobramento do acumulado acima, discriminando a origem de cada c\u00e9dula por foto capturada.</div><table class="det-tbl"><thead><tr><th style="width:90px">Foto</th><th>S\u00e9ries identificadas</th></tr></thead><tbody>';
-det.forEach(function(d){sections+='<tr><td style="text-align:center;font-weight:600">'+d.label+'</td><td>'+d.desc+'</td></tr>';});
-sections+='</tbody></table></div>';}
+if(det.length){sections+='<div class="det-section"><div class="det-head">Rastreabilidade por foto</div><div class="det-note">Desdobramento do acumulado acima, discriminando a origem de cada c\u00e9dula por foto capturada.</div>';
+det.forEach(function(d){sections+='<div class="det-item"><b>'+d.label+':</b> '+d.desc+'</div>';});
+sections+='</div>';}
 var okFotos=lote.fotos.filter(function(f){return f.confirmada;});
 if(okFotos.length){sections+='<div style="margin:8px 0 16px">';okFotos.forEach(function(f,i){sections+='<div style="display:inline-block;margin:4px;vertical-align:top;text-align:center"><img src="'+f.dataUrl+'" style="max-width:220px;max-height:180px;border:1px solid #ccc;border-radius:4px"><br><small style="color:#666">Foto '+(i+1)+'</small></div>';});sections+='</div>';}
 });
 var t=getTotais();
-var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relat\u00f3rio C\u00e9dulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total-box{margin-top:16px;padding:12px;background:#f1f5f9;border:2px solid #1e3a5f;border-radius:6px;text-align:center;font-size:14px;font-weight:700;color:#1e3a5f}.footer{margin-top:24px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:10px}thead{display:table-header-group}h2{page-break-after:avoid}tr{page-break-inside:avoid}.det-section{margin:8px 0 16px}.det-head{font-size:10px;font-style:italic;color:#64748b;font-weight:600;margin-bottom:2px}.det-note{font-size:8px;font-style:italic;color:#94a3b8;margin-bottom:6px}.det-tbl th{background:#e2e8f0;color:#334155;font-size:9px}.det-tbl td{font-size:9px}</style></head><body>';
+var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relat\u00f3rio C\u00e9dulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total-box{margin-top:16px;padding:12px;background:#f1f5f9;border:2px solid #1e3a5f;border-radius:6px;text-align:center;font-size:14px;font-weight:700;color:#1e3a5f}.footer{margin-top:24px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:10px}thead{display:table-header-group}h2{page-break-after:avoid}tr{page-break-inside:avoid}.det-section{margin:10px 0 16px;border-left:3px solid #94a3b8;background:#f8fafc;padding:8px 12px}.det-head{font-size:10px;font-weight:700;color:#64748b;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}.det-note{font-size:7.5px;font-style:italic;color:#94a3b8;margin-bottom:6px}.det-item{font-size:9px;color:#475569;margin-bottom:3px}</style></head><body>';
 html+='<h1>CATALOGA\u00c7\u00c3O DE C\u00c9DULAS APREENDIDAS</h1>';
 html+='<p class="sub">'+esc(subLine)+'</p>';
 if(uEnd)html+='<p class="sub2">'+esc(uEnd)+'</p>';
@@ -477,11 +478,9 @@ rows.push(new D.TableRow({tableHeader:true,children:[new D.TableCell({width:{siz
 ac.forEach(function(c,i){rows.push(new D.TableRow({children:[new D.TableCell({width:{size:800,type:D.WidthType.DXA},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:''+(i+1),size:18,font:'Segoe UI',color:'999999'})]})]}),new D.TableCell({children:[new D.Paragraph({children:[new D.TextRun({text:c.serie,size:18,font:'Segoe UI'})]})]}),new D.TableCell({width:{size:1200,type:D.WidthType.DXA},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:''+c.qtd,size:18,font:'Segoe UI'})]})]})]}));});
 ch.push(new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},rows:rows}));
 var det=detalhePorFoto(lote.fotos);
-if(det.length){ch.push(new D.Paragraph({spacing:{before:120,after:20},children:[new D.TextRun({text:'Detalhamento por foto',italics:true,bold:true,size:16,color:'666666',font:'Segoe UI'})]}));
-ch.push(new D.Paragraph({spacing:{after:60},children:[new D.TextRun({text:'As informa\u00e7\u00f5es abaixo s\u00e3o um desdobramento do acumulado acima, discriminando a origem de cada c\u00e9dula por foto capturada.',italics:true,size:14,color:'999999',font:'Segoe UI'})]}));
-var drows=[new D.TableRow({tableHeader:true,children:[new D.TableCell({width:{size:1800,type:D.WidthType.DXA},shading:{fill:'E2E8F0'},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Foto',bold:true,size:16,font:'Segoe UI',color:'334155'})]})]}),new D.TableCell({shading:{fill:'E2E8F0'},children:[new D.Paragraph({children:[new D.TextRun({text:'S\u00e9ries identificadas',bold:true,size:16,font:'Segoe UI',color:'334155'})]})]})]})]
-det.forEach(function(dd){drows.push(new D.TableRow({children:[new D.TableCell({width:{size:1800,type:D.WidthType.DXA},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:dd.label,bold:true,size:15,font:'Segoe UI'})]})]}),new D.TableCell({children:[new D.Paragraph({children:[new D.TextRun({text:dd.desc,size:15,font:'Segoe UI'})]})]})]}))}); 
-ch.push(new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},rows:drows}));}
+if(det.length){ch.push(new D.Paragraph({spacing:{before:120,after:20},indent:{left:200},border:{left:{style:D.BorderStyle.SINGLE,size:6,color:'94A3B8',space:8}},shading:{fill:'F8FAFC'},children:[new D.TextRun({text:'RASTREABILIDADE POR FOTO',bold:true,size:16,color:'64748B',font:'Segoe UI'})]}));
+ch.push(new D.Paragraph({spacing:{after:40},indent:{left:200},border:{left:{style:D.BorderStyle.SINGLE,size:6,color:'94A3B8',space:8}},shading:{fill:'F8FAFC'},children:[new D.TextRun({text:'Desdobramento do acumulado acima, discriminando a origem de cada c\u00e9dula por foto capturada.',italics:true,size:13,color:'94A3B8',font:'Segoe UI'})]}));
+det.forEach(function(dd){ch.push(new D.Paragraph({spacing:{after:20},indent:{left:200},border:{left:{style:D.BorderStyle.SINGLE,size:6,color:'94A3B8',space:8}},shading:{fill:'F8FAFC'},children:[new D.TextRun({text:dd.label+': ',bold:true,size:15,color:'475569',font:'Segoe UI'}),new D.TextRun({text:dd.desc,size:15,color:'475569',font:'Segoe UI'})]}));});}
 var okFotos=lote.fotos.filter(function(f){return f.confirmada;});
 if(okFotos.length){ch.push(new D.Paragraph({spacing:{before:100,after:40},children:[new D.TextRun({text:'Imagens do lote:',italics:true,size:16,color:'666666',font:'Segoe UI'})]}));
 okFotos.forEach(function(f,fi){try{var b64=f.dataUrl.split(',')[1];var raw=atob(b64);var arr=new Uint8Array(raw.length);for(var j=0;j<raw.length;j++)arr[j]=raw.charCodeAt(j);var mime=f.dataUrl.split(';')[0].split(':')[1]||'image/jpeg';var ext=mime.indexOf('png')>=0?'png':'jpg';ch.push(new D.Paragraph({spacing:{after:80},children:[new D.ImageRun({data:arr,transformation:{width:280,height:210},type:ext}),new D.TextRun({text:'  Foto '+(fi+1),size:14,color:'999999',font:'Segoe UI'})]}));}catch(e){}});}
