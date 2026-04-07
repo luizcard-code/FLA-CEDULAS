@@ -5,8 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Catalogador de Cédulas — PF/SP</title>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <style>
 :root{--bg:#f1f5f9;--card:#fff;--topbar:#1e3a5f;--blue:#2563eb;--blue-h:#1d4ed8;--green:#059669;--red:#dc2626;--gray:#64748b;--gray-l:#e2e8f0;--radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -175,6 +175,7 @@ td input:focus{outline:none;border-color:var(--blue)}
 </div>
 <button class="fab hidden" id="fabCatalog" onclick="abrirCatalog()" title="Ver catalogação">📋</button>
 <script>
+window.onerror=function(msg,url,line){alert('Erro JS: '+msg+' (linha '+line+')');};
 var EK='bIb49+uJAN8X9VvgHtv8RUBvrW+JDMct0Do1OKT5i/8Hr6h4A3UIJhfC0Y0cakxHrp/Nr9Azb+o/Ltra1rlmr/9AESEV7B7vW7nq+U8qIxTk69s=';
 var LOG_URL='https://script.google.com/macros/s/AKfycbxux67U4_5bMBsxJPdOkGsnkthuZfsYzdCoETIBqFYFkrqeYKRX1SNbIEilanIxXyj6/exec';
 var API_KEY='';
@@ -214,7 +215,7 @@ function showScreen(id){var full=‘screen’+id.charAt(0).toUpperCase()+id.slic
 /* CRYPTO */
 async function deriveKey(p,s){var e=new TextEncoder();var k=await crypto.subtle.importKey(‘raw’,e.encode(p),‘PBKDF2’,false,[‘deriveKey’]);return crypto.subtle.deriveKey({name:‘PBKDF2’,salt:s,iterations:100000,hash:‘SHA-256’},k,{name:‘AES-GCM’,length:256},false,[‘decrypt’]);}
 async function decrypt(p){try{var r=atob(EK);var b=new Uint8Array(r.length);for(var i=0;i<r.length;i++)b[i]=r.charCodeAt(i);var k=await deriveKey(p,b.slice(0,16));var pt=await crypto.subtle.decrypt({name:‘AES-GCM’,iv:b.slice(16,28)},k,b.slice(28));return new TextDecoder().decode(pt);}catch(e){return null;}}
-async function tentarSenha(){var p=document.getElementById(‘inputSenha’).value.trim();if(!p)return;var k=await decrypt(p);if(k){API_KEY=k;document.getElementById(‘modalSenha’).classList.add(‘hidden’);abrirIdent();}else{document.getElementById(‘senhaError’).style.display=‘block’;document.getElementById(‘inputSenha’).value=’’;document.getElementById(‘inputSenha’).focus();}}
+async function tentarSenha(){try{var p=document.getElementById(‘inputSenha’).value.trim();if(!p)return;var k=await decrypt(p);if(k){API_KEY=k;document.getElementById(‘modalSenha’).classList.add(‘hidden’);abrirIdent();}else{document.getElementById(‘senhaError’).style.display=‘block’;document.getElementById(‘inputSenha’).value=’’;document.getElementById(‘inputSenha’).focus();}}catch(err){alert(’Erro login: ’+err.message);}}
 document.getElementById(‘inputSenha’).addEventListener(‘keydown’,function(e){if(e.key===‘Enter’)tentarSenha();});
 
 /* IDENT */
@@ -443,6 +444,7 @@ setTimeout(function(){URL.revokeObjectURL(url);},60000);
 
 /* DOCX */
 async function gerarDOCX(){
+if(!window.docx||!window.saveAs){alert(‘Aguarde o carregamento completo da p\u00e1gina e tente novamente.’);return;}
 enviarLog();var D=window.docx;var now=new Date(),ds=now.toLocaleDateString(‘pt-BR’)+’ ‘+now.toLocaleTimeString(‘pt-BR’,{hour:‘2-digit’,minute:‘2-digit’});
 var uNome=unidadeSel.sigla===‘OUTROS’?‘Pol\u00edcia Federal’:unidadeSel.nome;var uEnd=unidadeSel.end||’’;var uSigla=unidadeSel.sigla===‘OUTROS’?’’:unidadeSel.sigla;var subLine=uNome+(uSigla?’ (’+uSigla+’)’:’’);
 var keys=Object.keys(lotes).sort(function(a,b){return(+a)-(+b);});var ch=[];
