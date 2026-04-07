@@ -1,30 +1,33 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Catalogador de Cédulas — PF/SP</title>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <style>
 :root{--bg:#f1f5f9;--card:#fff;--topbar:#1e3a5f;--blue:#2563eb;--blue-h:#1d4ed8;--green:#059669;--red:#dc2626;--gray:#64748b;--gray-l:#e2e8f0;--radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#1e293b;min-height:100vh;padding-bottom:80px}
-.topbar{background:var(--topbar);color:#fff;padding:16px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.topbar h1{font-size:1.05rem;font-weight:700;letter-spacing:.5px}
-.topbar small{font-size:.7rem;opacity:.7;display:block;margin-top:2px}
-.topbar .unit-tag{font-size:.65rem;background:rgba(255,255,255,.15);display:inline-block;padding:2px 10px;border-radius:20px;margin-top:4px}
-.container{max-width:600px;margin:0 auto;padding:16px}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#1e293b;min-height:100vh;padding-bottom:90px}
+.topbar{background:var(--topbar);color:#fff;padding:14px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar h1{font-size:1rem;font-weight:700;letter-spacing:.5px}
+.topbar small{font-size:.68rem;opacity:.7;display:block;margin-top:2px}
+.topbar .unit-tag{font-size:.62rem;background:rgba(255,255,255,.15);display:inline-block;padding:2px 10px;border-radius:20px;margin-top:4px}
+.container{max-width:560px;margin:0 auto;padding:16px}
 .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
-.card h2{font-size:.95rem;color:var(--topbar);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2{font-size:.92rem;color:var(--topbar);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .card h2 .step{background:var(--blue);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius);font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;width:100%;touch-action:manipulation}
 .btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--blue-h)}.btn-blue:disabled{background:#94a3b8;cursor:not-allowed}
-.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#047857}
-.btn-green:disabled{background:#94a3b8;cursor:not-allowed}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#047857}.btn-green:disabled{background:#94a3b8;cursor:not-allowed}
 .btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#b91c1c}
 .btn-outline{background:transparent;border:2px solid var(--blue);color:var(--blue)}.btn-outline:hover{background:var(--blue);color:#fff}
-.btn-sm{padding:8px 14px;font-size:.85rem;width:auto}
-.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-row .btn{flex:1;min-width:140px}
-/* Modals */
+.btn-sm{padding:10px 14px;font-size:.88rem;width:auto}
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.btn-row .btn{flex:1;min-width:120px}
+.back-btn{background:none;border:none;color:var(--blue);font-size:.85rem;font-weight:600;cursor:pointer;padding:8px 0;margin-bottom:8px}
+/* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .modal{background:#fff;border-radius:var(--radius);padding:32px;max-width:440px;width:100%;text-align:center}
 .modal h2{color:var(--topbar);margin-bottom:8px;font-size:1.1rem}
@@ -33,80 +36,78 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:#1e293b
 .modal input[type=password]:focus{outline:none;border-color:var(--blue)}
 .modal .btn{margin-top:16px}
 .modal .error{color:var(--red);font-size:.85rem;margin-top:8px;display:none}
-/* Ident modal */
+/* Ident */
 .ident-modal{text-align:left}
-.ident-modal h2{text-align:center}
-.ident-modal p{text-align:center}
+.ident-modal h2,.ident-modal p{text-align:center}
 .ident-modal label{display:block;font-size:.82rem;color:var(--gray);margin-bottom:4px;margin-top:14px;font-weight:600}
 .ident-modal label:first-of-type{margin-top:0}
-.ident-modal input,.ident-modal select{width:100%;padding:11px 12px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:.95rem;color:#1e293b}
+.ident-modal input,.ident-modal select{width:100%;padding:11px 12px;border:2px solid var(--gray-l);border-radius:var(--radius);font-size:.95rem}
 .ident-modal input:focus,.ident-modal select:focus{outline:none;border-color:var(--blue)}
-.ident-modal .unit-addr{font-size:.75rem;color:var(--gray);margin-top:6px;min-height:32px;padding:6px 10px;background:#f8fafc;border-radius:8px;line-height:1.3}
+.ident-modal .unit-addr{font-size:.75rem;color:var(--gray);margin-top:6px;min-height:32px;padding:6px 10px;background:#f8fafc;border-radius:8px}
 .ident-modal .ident-err{color:var(--red);font-size:.82rem;margin-top:10px;display:none;text-align:center}
-/* Review modal */
-.review-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
-.review-modal{background:#fff;border-radius:var(--radius);max-width:560px;width:100%;margin:20px auto;box-shadow:0 12px 40px rgba(0,0,0,.3)}
-.review-header{background:var(--topbar);color:#fff;padding:16px 20px;border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:center;justify-content:space-between}
-.review-header h3{font-size:1rem;font-weight:700}
-.review-close{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:4px 8px;opacity:.7}.review-close:hover{opacity:1}
-.review-body{padding:20px;max-height:70vh;overflow-y:auto}
-.review-body h4{font-size:.85rem;color:var(--topbar);margin:16px 0 8px;border-bottom:2px solid var(--topbar);padding-bottom:4px}
-.review-body h4:first-child{margin-top:0}
-.review-body table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:8px}
-.review-body th{background:var(--topbar);color:#fff;padding:8px 10px;text-align:left;white-space:nowrap}
-.review-body td{padding:6px 10px;border-bottom:1px solid var(--gray-l)}
-.review-body tr:hover td{background:#f8fafc}
-.review-body td select,.review-body td input{width:100%;border:1px solid var(--gray-l);border-radius:6px;padding:6px 8px;font-size:.82rem;font-family:inherit}
-.review-body td select:focus,.review-body td input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
-.review-body .tbl-total td{font-weight:700;background:#f1f5f9;border-top:2px solid var(--topbar)}
-.review-tip{font-size:.75rem;color:var(--gray);margin-bottom:12px;text-align:center}
-.review-footer{padding:16px 20px;border-top:1px solid var(--gray-l)}
-.review-footer .btn-row-rv{display:flex;gap:10px}
-.review-footer .btn-row-rv .btn{flex:1}
-.review-add-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-.review-add-row select,.review-add-row input{padding:6px 8px;border:1px solid var(--gray-l);border-radius:6px;font-size:.82rem}
-.review-add-row select{width:100px}
-.review-add-row input{flex:1;min-width:100px}
-.review-add-row button{padding:6px 12px;border:none;background:var(--blue);color:#fff;border-radius:6px;font-size:.82rem;cursor:pointer;white-space:nowrap}
+/* Denomination grid */
+.denom-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.denom-btn{position:relative;background:#fff;border:2px solid var(--gray-l);border-radius:12px;padding:18px 12px;cursor:pointer;text-align:center;transition:all .15s}
+.denom-btn:active{transform:scale(.97)}
+.denom-btn .dval{font-size:1.3rem;font-weight:800}
+.denom-btn .dsub{font-size:.72rem;color:#94a3b8;margin-top:4px}
+.denom-btn.done{border-width:2px}
+.denom-btn.done .dsub{font-weight:700}
+/* Progress bar */
+.progress-box{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-row span{font-size:.85rem;font-weight:700}
+/* Photos */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin:12px 0}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid var(--gray-l)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb .del{position:absolute;top:3px;right:3px;background:var(--red);color:#fff;border:none;width:22px;height:22px;border-radius:50%;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* Table */
+.tbl-wrap{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--topbar);color:#fff;padding:8px 10px;text-align:left;white-space:nowrap}
+td{padding:6px 10px;border-bottom:1px solid var(--gray-l)}
+tr:hover td{background:#f8fafc}
+.tbl-total td{font-weight:700;background:#f1f5f9!important;border-top:2px solid var(--topbar)}
+td input,td select{width:100%;border:1px solid var(--gray-l);border-radius:6px;padding:5px 8px;font-size:.82rem}
+td input:focus{outline:none;border-color:var(--blue)}
 .del-row{background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;padding:2px 6px}
+.add-row-wrap{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.add-row-wrap input{flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--gray-l);border-radius:8px;font-size:.82rem}
+.add-row-wrap button{padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;white-space:nowrap}
+/* Alert */
+.alert{border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;display:flex;align-items:center;gap:8px}
+.alert-warn{background:#fef3c7;border:1px solid #f59e0b;color:#92400e}
+.alert-ok{background:#ecfdf5;border:1px solid #059669;color:#065f46}
+.alert-err{background:#fef2f2;border:1px solid #dc2626;color:#991b1b}
 /* Disclaimer */
 .disclaimer{background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 14px;margin-top:16px;font-size:.78rem;color:#92400e;line-height:1.5}
 .disclaimer b{color:#78350f}
 .disclaimer-check{display:flex;align-items:flex-start;gap:10px;margin-top:10px;cursor:pointer}
-.disclaimer-check input[type=checkbox]{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--green);cursor:pointer}
-.disclaimer-check span{font-size:.8rem;color:#78350f;font-weight:600;line-height:1.4}
-/* Guide */
-.guide-box{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:var(--radius);padding:16px;text-align:center}
-.guide-box svg{max-width:100%;height:auto}
-.guide-box p{font-size:.8rem;color:var(--gray);margin-top:10px;line-height:1.4}
-/* Photos */
-.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin:12px 0}
-.photo-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid var(--gray-l)}
-.photo-thumb img{width:100%;height:100%;object-fit:cover}
-.photo-thumb .del{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.counter{font-size:.85rem;color:var(--gray);margin:8px 0}
-/* Table */
-.tbl-wrap{overflow-x:auto;margin:12px 0}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th{background:var(--topbar);color:#fff;padding:10px 12px;text-align:left;white-space:nowrap}
-td{padding:8px 12px;border-bottom:1px solid var(--gray-l)}
-tr:hover td{background:#f8fafc}
-td[contenteditable]{cursor:text;outline:none;border-bottom:2px solid transparent}
-td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
-.tbl-total{font-weight:700;background:#f1f5f9 !important}
+.disclaimer-check input[type=checkbox]{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--green)}
+.disclaimer-check span{font-size:.8rem;color:#78350f;font-weight:600}
 /* Loading */
-.loading{text-align:center;padding:40px 20px}
-.spinner{width:40px;height:40px;border:4px solid var(--gray-l);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+.loading{text-align:center;padding:30px 20px}
+.spinner{width:36px;height:36px;border:4px solid var(--gray-l);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading p{color:var(--gray);font-size:.9rem}
-.lgpd{text-align:center;font-size:.7rem;color:#94a3b8;margin-top:20px;padding:8px}
-.hidden{display:none !important}
+.loading p{color:var(--gray);font-size:.88rem}
+.lgpd{text-align:center;font-size:.7rem;color:#94a3b8;margin-top:16px;padding:8px}
+.hidden{display:none!important}
+/* Floating catalog button */
+.fab{position:fixed;bottom:20px;right:20px;background:var(--topbar);color:#fff;border:none;width:56px;height:56px;border-radius:50%;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:90;display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.93)}
+/* Catalog header */
+.cat-section{margin-bottom:20px}
+.cat-section-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--topbar)}
+.cat-section-head .badge{padding:4px 12px;border-radius:6px;font-weight:800;font-size:.85rem;color:#fff}
+.cat-section-head span{font-size:.82rem;color:var(--topbar);font-weight:600}
 @media print{body{display:none}}
 </style>
 </head>
 <body>
 
-<!-- 1) SENHA -->
+<!-- SENHA -->
+
 <div class="modal-overlay" id="modalSenha">
 <div class="modal">
 <h2>🔐 Acesso Restrito</h2>
@@ -117,7 +118,8 @@ td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
 </div>
 </div>
 
-<!-- 2) IDENTIFICAÇÃO + UNIDADE -->
+<!-- IDENTIFICAÇÃO -->
+
 <div class="modal-overlay hidden" id="modalIdent">
 <div class="modal ident-modal">
 <h2>👤 Identificação</h2>
@@ -134,28 +136,8 @@ td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
 </div>
 </div>
 
-<!-- 3) REVIEW MODAL -->
-<div class="review-overlay hidden" id="reviewOverlay">
-<div class="review-modal">
-<div class="review-header"><h3>📋 Revisão final</h3><button class="review-close" onclick="fecharReview()">✕</button></div>
-<div class="review-body" id="reviewBody"></div>
-<div class="review-footer">
-<div class="disclaimer">
-<b>⚠️ ATENÇÃO:</b> A extração automática de dados pode conter erros. É responsabilidade do servidor conferir todas as informações (valores e números de série) antes de emitir o relatório. O sistema é uma ferramenta auxiliar — <b>a validação final é de inteira responsabilidade do usuário</b>.
-<label class="disclaimer-check">
-<input type="checkbox" id="chkAceite" onchange="toggleBtnPDF()">
-<span>Declaro que revisei todas as informações acima e confirmo que os dados estão corretos.</span>
-</label>
-</div>
-<div class="btn-row-rv" style="margin-top:12px">
-<button class="btn btn-outline btn-sm" onclick="fecharReview()">← Voltar</button>
-<button class="btn btn-green btn-sm" id="btnConfPDF" disabled onclick="confirmarPDF()">✅ Gerar PDF</button>
-</div>
-</div>
-</div>
-</div>
-
 <!-- TOPBAR -->
+
 <div class="topbar">
 <h1>CATALOGADOR DE CÉDULAS</h1>
 <small>Polícia Federal — Estado de São Paulo</small>
@@ -164,69 +146,139 @@ td[contenteditable]:focus{border-bottom-color:var(--blue);background:#eff6ff}
 
 <div class="container" id="app" style="display:none">
 
-<!-- STEP 1 -->
-<div class="card" id="cardCaptura">
-<h2><span class="step">1</span> Fotografar cédulas</h2>
-<div class="guide-box">
-<svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" style="max-height:160px">
-<rect width="360" height="180" fill="#f8fafc" rx="8"/>
-<rect x="16" y="16" width="72" height="38" rx="4" fill="#059669" stroke="#047857" stroke-width="1"/><text x="52" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$100</text>
-<rect x="96" y="16" width="72" height="38" rx="4" fill="#059669" stroke="#047857" stroke-width="1"/><text x="132" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$100</text>
-<rect x="176" y="16" width="72" height="38" rx="4" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/><text x="212" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$50</text>
-<rect x="256" y="16" width="72" height="38" rx="4" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/><text x="292" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$50</text>
-<text x="52" y="50" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="5">AB1234567</text>
-<text x="132" y="50" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="5">CD9876543</text>
-<text x="212" y="50" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="5">EF1112131</text>
-<text x="292" y="50" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="5">GH4445464</text>
-<rect x="16" y="66" width="72" height="38" rx="4" fill="#d97706" stroke="#b45309" stroke-width="1"/><text x="52" y="89" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$20</text>
-<rect x="96" y="66" width="72" height="38" rx="4" fill="#d97706" stroke="#b45309" stroke-width="1"/><text x="132" y="89" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$20</text>
-<rect x="176" y="66" width="72" height="38" rx="4" fill="#dc2626" stroke="#b91c1c" stroke-width="1"/><text x="212" y="89" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">R$10</text>
-<line x1="300" y1="70" x2="300" y2="100" stroke="#64748b" stroke-width="1" stroke-dasharray="3"/>
-<text x="320" y="88" fill="#64748b" font-size="7" text-anchor="middle">Série</text><text x="320" y="97" fill="#64748b" font-size="7" text-anchor="middle">visível</text>
-<rect x="16" y="120" width="328" height="44" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
-<text x="180" y="139" text-anchor="middle" fill="#1e3a5f" font-size="8.5" font-weight="600">Organize as cédulas lado a lado, em fileiras</text>
-<text x="180" y="153" text-anchor="middle" fill="#64748b" font-size="7.5">Valor e número de série devem estar visíveis</text>
-</svg>
-<p>Organize as cédulas como acima e tire fotos de perto, com boa iluminação.</p>
+<!-- TELA HOME -->
+
+<div id="screenHome">
+<div class="card">
+<h2><span class="step">1</span> Selecione a denominação</h2>
+<p style="font-size:.78rem;color:var(--gray);margin-bottom:14px;margin-left:34px">Toque no valor das cédulas que vai catalogar</p>
+<div class="denom-grid" id="denomGrid"></div>
 </div>
-<input type="file" id="inputFoto" accept="image/*" capture="environment" class="hidden" multiple>
-<button class="btn btn-blue" onclick="document.getElementById('inputFoto').click()" style="margin-top:16px">📷 Tirar foto / Selecionar imagem</button>
-<div class="counter hidden" id="fotoCounter">0 fotos capturadas</div>
+<div class="progress-box hidden" id="progressBox">
+<div class="progress-row">
+<span style="color:var(--topbar)">Progresso</span>
+<span id="progressTotal" style="color:var(--green)"></span>
+</div>
+<button class="btn btn-green" onclick="abrirRevisao()">📄 Finalizar relatório</button>
+</div>
+</div>
+
+<!-- TELA LOTE: QTD -->
+
+<div id="screenLoteQtd" class="hidden">
+<button class="back-btn" onclick="showScreen('home')">← Voltar</button>
+<div class="card" style="text-align:center">
+<div id="loteQtdIcon" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;font-weight:800"></div>
+<h2 style="justify-content:center" id="loteQtdTitle"></h2>
+<input type="number" inputmode="numeric" id="inputQtd" placeholder="0" style="width:140px;padding:16px;border:2px solid var(--blue);border-radius:12px;font-size:2rem;text-align:center;font-weight:700;color:var(--topbar);outline:none;margin:8px 0">
+<div style="font-size:.78rem;color:#94a3b8">Conte manualmente e informe acima</div>
+<button class="btn btn-blue" style="margin-top:20px" onclick="irParaFoto()">📷 Fotografar lote</button>
+</div>
+</div>
+
+<!-- TELA LOTE: FOTO -->
+
+<div id="screenLoteFoto" class="hidden">
+<button class="back-btn" onclick="showScreen('loteQtd')">← Voltar</button>
+<div class="card">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+<div id="fotoTag" style="padding:5px 14px;border-radius:8px;font-weight:800;font-size:.9rem;color:#fff"></div>
+<span id="fotoQtdLabel" style="font-size:.82rem;color:var(--gray)"></span>
+</div>
+<div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;margin-bottom:14px">
+<div style="font-size:2rem;margin-bottom:6px">📷</div>
+<p id="fotoInstrucao" style="font-size:.82rem;color:var(--gray);line-height:1.4"></p>
+</div>
+<input type="file" id="inputFoto" accept="image/*" class="hidden" multiple>
 <div class="photo-grid" id="fotoGrid"></div>
-<button class="btn btn-green hidden" id="btnAnalisar" onclick="analisar()">🔍 Analisar cédulas</button>
+<div id="fotoCounter" class="hidden" style="font-size:.82rem;color:var(--gray);margin:6px 0"></div>
+<button class="btn btn-outline btn-sm" onclick="document.getElementById('inputFoto').click()" style="margin-bottom:10px">📷 Tirar foto / Selecionar</button>
+<button class="btn btn-blue" id="btnExtrair" onclick="extrairSeries()" disabled>🔍 Extrair séries</button>
 </div>
-
-<!-- LOADING -->
 <div class="card hidden" id="cardLoading">
-<div class="loading"><div class="spinner"></div><p>Analisando cédulas...</p><p style="font-size:.75rem;color:#94a3b8;margin-top:4px">Isso pode levar alguns segundos</p></div>
+<div class="loading"><div class="spinner"></div><p>Extraindo números de série...</p></div>
+</div>
 </div>
 
-<!-- STEP 2 -->
-<div class="card hidden" id="cardResultado">
-<h2><span class="step">2</span> Resultado da análise</h2>
-<p style="font-size:.8rem;color:var(--gray);margin-bottom:12px">Clique em qualquer célula para editar. O resumo atualiza automaticamente.</p>
-<h3 style="font-size:.85rem;margin-bottom:8px;color:var(--topbar)">Tabela detalhada</h3>
-<div class="tbl-wrap" id="tblDetalhe"></div>
-<h3 style="font-size:.85rem;margin:16px 0 8px;color:var(--topbar)">Resumo por denominação</h3>
-<div class="tbl-wrap" id="tblResumo"></div>
-<div class="btn-row">
-<button class="btn btn-blue btn-sm" onclick="copiarTabela()">📋 Copiar tabela</button>
-<button class="btn btn-green btn-sm" onclick="abrirReview()">📄 Gerar PDF</button>
+<!-- TELA LOTE: TABELA VALIDAÇÃO -->
+
+<div id="screenLoteTabela" class="hidden">
+<button class="back-btn" onclick="showScreen('loteFoto')">← Voltar</button>
+<div id="loteAlerta"></div>
+<div class="card" style="padding:0;overflow:hidden">
+<div id="loteTabelaHead" style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--gray-l)"></div>
+<div class="tbl-wrap" style="margin:0" id="loteTabelaWrap"></div>
+<div style="padding:10px 16px;border-top:1px solid var(--gray-l)">
+<div class="add-row-wrap">
+<input type="text" id="addSerie" placeholder="Nº série manual" onkeydown="if(event.key==='Enter')addSerieManual()">
+<input type="number" id="addQtd" placeholder="Qtd" style="width:60px;min-width:60px;flex:none" value="1">
+<button onclick="addSerieManual()">+ Adicionar</button>
+</div>
+</div>
+</div>
+<button class="btn btn-green" style="margin-top:14px" onclick="confirmarLote()">✓ Confirmar lote</button>
+</div>
+
+<!-- TELA CATALOGAÇÃO GERAL -->
+
+<div id="screenCatalog" class="hidden">
+<button class="back-btn" onclick="showScreen('home')">← Voltar</button>
+<div class="card">
+<h2><span class="step">📋</span> Catalogação completa</h2>
+<div id="catalogBody"></div>
+<div id="catalogTotal" style="border-top:2px solid var(--topbar);padding-top:10px;margin-top:10px"></div>
 </div>
 <div class="btn-row">
-<button class="btn btn-outline btn-sm" onclick="novaAnalise()">🔄 Nova análise</button>
+<button class="btn btn-outline btn-sm" onclick="showScreen('home')">← Voltar</button>
+<button class="btn btn-green btn-sm" onclick="abrirRevisao()">📄 Finalizar</button>
+</div>
+</div>
+
+<!-- TELA REVISÃO FINAL -->
+
+<div id="screenRevisao" class="hidden">
+<button class="back-btn" onclick="showScreen('home')">← Voltar</button>
+<div class="card" style="padding:0;overflow:hidden">
+<div style="background:var(--topbar);color:#fff;padding:14px 20px"><h3 style="font-size:.95rem;font-weight:700">📋 Revisão Final</h3></div>
+<div style="padding:20px;max-height:55vh;overflow-y:auto" id="revisaoBody"></div>
+<div style="padding:0 20px 20px">
+<div class="disclaimer">
+<b>⚠️ ATENÇÃO:</b> A extração automática pode conter erros. Confira todos os dados antes de gerar o relatório. A validação final é de <b>inteira responsabilidade do usuário</b>.
+<label class="disclaimer-check">
+<input type="checkbox" id="chkAceite" onchange="toggleBtnFinal()">
+<span>Declaro que revisei todas as informações e confirmo que estão corretas.</span>
+</label>
+</div>
+<div class="btn-row" style="margin-top:14px">
+<button class="btn btn-outline btn-sm" onclick="showScreen('home')">← Voltar</button>
+<button class="btn btn-green btn-sm" id="btnGerarPDF" disabled onclick="gerarPDF()">📄 PDF</button>
+<button class="btn btn-blue btn-sm" id="btnGerarDOCX" disabled onclick="gerarDOCX()">📝 Word</button>
+</div>
+</div>
 </div>
 </div>
 
 <div class="lgpd">🔒 Nenhuma imagem é armazenada. Processamento 100% local no navegador.</div>
 </div>
 
+<!-- FAB -->
+
+<button class="fab hidden" id="fabCatalog" onclick="abrirCatalog()" title="Ver catalogação">📋</button>
+
 <script>
+/* ===== CONFIG ===== */
 var EK='bIb49+uJAN8X9VvgHtv8RUBvrW+JDMct0Do1OKT5i/8Hr6h4A3UIJhfC0Y0cakxHrp/Nr9Azb+o/Ltra1rlmr/9AESEV7B7vW7nq+U8qIxTk69s=';
 var LOG_URL='https://script.google.com/macros/s/AKfycbxux67U4_5bMBsxJPdOkGsnkthuZfsYzdCoETIBqFYFkrqeYKRX1SNbIEilanIxXyj6/exec';
-var API_KEY='',fotos=[],cedulas=[];
-var usuario={nome:'',matricula:''};
-
+var API_KEY='';
+var DENOMS=[
+{valor:2,cor:'#6b7280',label:'R$ 2'},
+{valor:5,cor:'#7c3aed',label:'R$ 5'},
+{valor:10,cor:'#2563eb',label:'R$ 10'},
+{valor:20,cor:'#d97706',label:'R$ 20'},
+{valor:50,cor:'#059669',label:'R$ 50'},
+{valor:100,cor:'#0891b2',label:'R$ 100'},
+{valor:200,cor:'#94a3b8',label:'R$ 200'}
+];
 var UNIDADES=[
 {sigla:'DPF/BRU/SP',nome:'Delegacia de Polícia Federal em Bauru',end:'Av. Getúlio Vargas nº 20-55, Jd. Europa, Bauru/SP — CEP 17017-383'},
 {sigla:'SR/PF/SP',nome:'Superintendência Regional em São Paulo',end:'Rua Hugo D\'Antola, 95 - Lapa de Baixo, São Paulo/SP — CEP 05038-090'},
@@ -246,7 +298,39 @@ var UNIDADES=[
 {sigla:'DPF/PDE/SP',nome:'Delegacia de Polícia Federal em Presidente Prudente',end:'Av. Luis Cezário, nº 380, Jd. Colina, Presidente Prudente/SP — CEP 19061-145'},
 {sigla:'OUTROS',nome:'Outra unidade',end:''}
 ];
+var usuario={nome:'',matricula:''};
 var unidadeSel=UNIDADES[0];
+
+/* ===== STATE ===== */
+var lotes={};       // {100:{qtdInformada:20,cedulas:[{serie:'AB123',qtd:3}]}, ...}
+var denomAtual=null; // DENOMS[i] currently being processed
+var fotos=[];        // current batch photos [{file,dataUrl,base64,mime}]
+var currentScreen='home';
+
+/* ===== UTILS ===== */
+function fBRL(v){return'R$ '+v.toFixed(2).replace('.',',');}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function getDenom(v){return DENOMS.find(function(d){return d.valor===v;});}
+function getTotais(){
+var tc=0,tv=0;
+Object.keys(lotes).forEach(function(v){
+var l=lotes[v];if(!l||!l.cedulas)return;
+var qLote=l.cedulas.reduce(function(s,c){return s+c.qtd;},0);
+tc+=qLote;tv+=qLote*(+v);
+});
+return{cedulas:tc,valor:tv};
+}
+
+/* ===== SCREENS ===== */
+var screens=['screenHome','screenLoteQtd','screenLoteFoto','screenLoteTabela','screenCatalog','screenRevisao'];
+function showScreen(id){
+var full='screen'+id.charAt(0).toUpperCase()+id.slice(1);
+screens.forEach(function(s){document.getElementById(s).classList.add('hidden');});
+document.getElementById(full).classList.remove('hidden');
+currentScreen=id;
+if(id==='home'){renderHome();updateFab();}
+window.scrollTo({top:0,behavior:'smooth'});
+}
 
 /* ===== CRYPTO ===== */
 async function deriveKey(p,s){var e=new TextEncoder();var k=await crypto.subtle.importKey('raw',e.encode(p),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:s,iterations:100000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['decrypt']);}
@@ -263,7 +347,7 @@ document.getElementById('modalIdent').classList.remove('hidden');document.getEle
 }
 function mostrarEndereco(){var u=UNIDADES[+document.getElementById('selUnidade').value];document.getElementById('unitAddr').textContent=u.sigla==='OUTROS'?'Identificada apenas como "Polícia Federal".':u.end||'';}
 function confirmarIdent(){
-var nome=document.getElementById('idNome').value.trim();var mat=document.getElementById('idMat').value.trim();
+var nome=document.getElementById('idNome').value.trim(),mat=document.getElementById('idMat').value.trim();
 if(!nome||!mat){document.getElementById('identErr').style.display='block';return;}
 usuario.nome=nome;usuario.matricula=mat;
 unidadeSel=UNIDADES[+document.getElementById('selUnidade').value];
@@ -272,128 +356,348 @@ var tag=document.getElementById('topUnit');
 tag.textContent=(unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.sigla)+' | '+usuario.nome;
 tag.style.display='inline-block';
 document.getElementById('app').style.display='block';
+renderHome();
+}
+
+/* ===== HOME ===== */
+function renderHome(){
+var grid=document.getElementById('denomGrid');grid.innerHTML='';
+DENOMS.forEach(function(d){
+var lote=lotes[d.valor];
+var done=lote&&lote.cedulas&&lote.cedulas.length>0;
+var qLote=done?lote.cedulas.reduce(function(s,c){return s+c.qtd;},0):0;
+var btn=document.createElement('button');
+btn.className='denom-btn'+(done?' done':'');
+if(done)btn.style.cssText='border-color:'+d.cor+';background:'+d.cor+'12';
+btn.innerHTML='<div class="dval" style="color:'+d.cor+'">'+d.label+'</div><div class="dsub" style="'+(done?'color:'+d.cor:'')+'">'+
+(done?'✓ '+qLote+' cédula'+(qLote!==1?'s':''):'Toque para iniciar')+'</div>';
+btn.onclick=function(){iniciarLote(d);};
+grid.appendChild(btn);
+});
+var t=getTotais();
+var pb=document.getElementById('progressBox');
+if(t.cedulas>0){
+pb.classList.remove('hidden');
+document.getElementById('progressTotal').textContent=t.cedulas+' cédulas — '+fBRL(t.valor);
+}else pb.classList.add('hidden');
+updateFab();
+}
+
+/* ===== FAB ===== */
+function updateFab(){var t=getTotais();document.getElementById('fabCatalog').classList.toggle('hidden',t.cedulas===0);}
+function abrirCatalog(){renderCatalog();showScreen('catalog');}
+
+/* ===== LOTE: QTD ===== */
+function iniciarLote(d){
+denomAtual=d;
+var lote=lotes[d.valor];
+document.getElementById('inputQtd').value=lote?lote.qtdInformada:'';
+var icon=document.getElementById('loteQtdIcon');
+icon.style.cssText='width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;font-weight:800;background:'+d.cor+'18;color:'+d.cor;
+icon.textContent=d.label;
+document.getElementById('loteQtdTitle').innerHTML='Quantas cédulas de '+d.label+'?';
+showScreen('loteQtd');
+document.getElementById('inputQtd').focus();
+}
+function irParaFoto(){
+var q=parseInt(document.getElementById('inputQtd').value)||0;
+if(q<=0){alert('Informe a quantidade.');return;}
+if(!lotes[denomAtual.valor])lotes[denomAtual.valor]={qtdInformada:q,cedulas:[],fotos:[]};
+else lotes[denomAtual.valor].qtdInformada=q;
+fotos=[];
+renderFotos();
+var tag=document.getElementById('fotoTag');
+tag.style.background=denomAtual.cor;tag.textContent=denomAtual.label;
+document.getElementById('fotoQtdLabel').textContent=q+' cédulas informadas';
+document.getElementById('fotoInstrucao').textContent='Espalhe as '+q+' cédulas de '+denomAtual.label+' na mesa com os números de série visíveis e tire fotos.';
+document.getElementById('btnExtrair').disabled=true;
+document.getElementById('cardLoading').classList.add('hidden');
+showScreen('loteFoto');
 }
 
 /* ===== PHOTOS ===== */
 document.getElementById('inputFoto').addEventListener('change',function(e){
 Array.from(e.target.files).forEach(function(f){var r=new FileReader();r.onload=function(ev){fotos.push({file:f,dataUrl:ev.target.result,base64:ev.target.result.split(',')[1],mime:f.type||'image/jpeg'});renderFotos();};r.readAsDataURL(f);});e.target.value='';
 });
-function renderFotos(){var g=document.getElementById('fotoGrid'),c=document.getElementById('fotoCounter');g.innerHTML='';fotos.forEach(function(f,i){var d=document.createElement('div');d.className='photo-thumb';d.innerHTML='<img src="'+f.dataUrl+'"><button class="del" onclick="removerFoto('+i+')">✕</button>';g.appendChild(d);});c.textContent=fotos.length+' foto'+(fotos.length!==1?'s':'')+' capturada'+(fotos.length!==1?'s':'');c.classList.toggle('hidden',fotos.length===0);document.getElementById('btnAnalisar').classList.toggle('hidden',fotos.length===0);}
+function renderFotos(){
+var g=document.getElementById('fotoGrid'),c=document.getElementById('fotoCounter');
+g.innerHTML='';
+fotos.forEach(function(f,i){var d=document.createElement('div');d.className='photo-thumb';d.innerHTML='<img src="'+f.dataUrl+'"><button class="del" onclick="removerFoto('+i+')">✕</button>';g.appendChild(d);});
+c.textContent=fotos.length+' foto'+(fotos.length!==1?'s':'')+' capturada'+(fotos.length!==1?'s':'');
+c.classList.toggle('hidden',fotos.length===0);
+document.getElementById('btnExtrair').disabled=fotos.length===0;
+}
 function removerFoto(i){fotos.splice(i,1);renderFotos();}
 
 /* ===== GEMINI ===== */
-async function analisar(){
-if(!fotos.length)return;document.getElementById('cardLoading').classList.remove('hidden');document.getElementById('btnAnalisar').disabled=true;
-var parts=[{text:'Você é um perito em análise de cédulas do Real brasileiro.\nAnalise as imagens fornecidas de cédulas apreendidas.\nPara CADA cédula visível nas imagens, identifique:\n1. Valor de face (R$2, R$5, R$10, R$20, R$50, R$100 ou R$200)\n2. Número de série (alfanumérico impresso na cédula)\n\nREGRAS:\n- Se não conseguir ler o número de série com certeza, coloque "ILEGÍVEL"\n- NÃO invente números. Se estiver parcialmente visível, coloque o que conseguir ler seguido de "(?)"\n- Agrupe cédulas de mesmo valor\n- Retorne APENAS um JSON válido, sem markdown, sem crases, no formato:\n{"cedulas":[{"valor":50,"serie":"AB123456789"}],"total_cedulas":1,"valor_face_total":50.00}'}];
+async function extrairSeries(){
+if(!fotos.length)return;
+document.getElementById('cardLoading').classList.remove('hidden');
+document.getElementById('btnExtrair').disabled=true;
+var qtdInf=lotes[denomAtual.valor].qtdInformada;
+var prompt='Você é um perito em cédulas do Real brasileiro.\n'+
+'Nas imagens há '+qtdInf+' cédulas de '+denomAtual.label+'.\n'+
+'Extraia APENAS os números de série de cada cédula.\n'+
+'Se várias cédulas tiverem a MESMA série, agrupe e informe a quantidade.\n'+
+'Se não conseguir ler a série, use "ILEGÍVEL".\n'+
+'NÃO invente números. Se parcialmente visível, coloque o que ler seguido de "(?)".\n'+
+'Retorne APENAS JSON válido sem markdown:\n'+
+'{"series":[{"numero":"AB1234567","qtd":1}]}';
+var parts=[{text:prompt}];
 fotos.forEach(function(f){parts.push({inlineData:{mimeType:f.mime,data:f.base64}});});
-try{var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':API_KEY},body:JSON.stringify({contents:[{parts:parts}]})});
-var data=await resp.json();if(!resp.ok)throw new Error(data.error?.message||'Erro na API');
-var txt=data.candidates?.[0]?.content?.parts?.[0]?.text||'';txt=txt.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim();
-cedulas=JSON.parse(txt).cedulas||[];mostrarResultado();
-}catch(err){alert('Erro: '+err.message);}
-finally{document.getElementById('cardLoading').classList.add('hidden');document.getElementById('btnAnalisar').disabled=false;}}
-
-/* ===== RESULTS ===== */
-function mostrarResultado(){document.getElementById('cardResultado').classList.remove('hidden');renderDetalhe();renderResumo();document.getElementById('cardResultado').scrollIntoView({behavior:'smooth'});}
-function renderDetalhe(){var h='<table><thead><tr><th>#</th><th>Valor</th><th>Número de série</th></tr></thead><tbody>';cedulas.forEach(function(c,i){h+='<tr><td>'+(i+1)+'</td><td contenteditable="true" data-idx="'+i+'" data-field="valor" onblur="editCell(this)">'+fBRL(c.valor)+'</td><td contenteditable="true" data-idx="'+i+'" data-field="serie" onblur="editCell(this)">'+esc(c.serie)+'</td></tr>';});h+='</tbody></table>';document.getElementById('tblDetalhe').innerHTML=h;}
-function renderResumo(){var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;var h='<table><thead><tr><th>Denominação</th><th>Qtd</th><th>Subtotal</th></tr></thead><tbody>';ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;h+='<tr><td>'+fBRL(+k)+'</td><td>'+m[k].q+'</td><td>'+fBRL(m[k].s)+'</td></tr>';});h+='<tr class="tbl-total"><td><b>TOTAL</b></td><td><b>'+tq+'</b></td><td><b>'+fBRL(tv)+'</b></td></tr></tbody></table>';document.getElementById('tblResumo').innerHTML=h;}
-function editCell(td){var i=+td.dataset.idx,f=td.dataset.field;if(f==='valor'){var v=parseFloat(td.textContent.replace(/[^\d,.]/g,'').replace(',','.'));if(!isNaN(v)){cedulas[i].valor=v;td.textContent=fBRL(v);}else td.textContent=fBRL(cedulas[i].valor);}else cedulas[i].serie=td.textContent.trim();renderResumo();}
-function fBRL(v){return'R$ '+v.toFixed(2).replace('.',',');}
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-
-/* ===== COPY ===== */
-function copiarTabela(){
-var u=unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.sigla;
-var t='CATALOGAÇÃO DE CÉDULAS APREENDIDAS\n'+u+'\nServidor: '+usuario.nome+' — Mat. '+usuario.matricula+'\nData: '+new Date().toLocaleDateString('pt-BR')+'\n\n#\tValor\t\tSérie\n'+'-'.repeat(50)+'\n';
-cedulas.forEach(function(c,i){t+=(i+1)+'\t'+fBRL(c.valor)+'\t\t'+c.serie+'\n';});
-t+='\nRESUMO\nDenom.\t\tQtd\tSubtotal\n'+'-'.repeat(40)+'\n';
-var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
-var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;
-ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;t+=fBRL(+k)+'\t\t'+m[k].q+'\t'+fBRL(m[k].s)+'\n';});
-t+='-'.repeat(40)+'\nTOTAL\t\t'+tq+'\t'+fBRL(tv)+'\n';
-navigator.clipboard.writeText(t).then(function(){alert('Copiado!');}).catch(function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Copiado!');});
-}
-
-/* ===== REVIEW MODAL ===== */
-function abrirReview(){
-var body=document.getElementById('reviewBody');
-document.getElementById('chkAceite').checked=false;toggleBtnPDF();
-var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
-var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;});
-var opts='<option value="2">R$ 2</option><option value="5">R$ 5</option><option value="10">R$ 10</option><option value="20">R$ 20</option><option value="50">R$ 50</option><option value="100">R$ 100</option><option value="200">R$ 200</option>';
-var h='<p class="review-tip">Confira os dados. Edite, adicione ou exclua antes de gerar o relatório.</p>';
-h+='<h4>Cédulas identificadas</h4><table><thead><tr><th style="width:30px">#</th><th style="width:95px">Valor</th><th>Série</th><th style="width:34px"></th></tr></thead><tbody>';
-cedulas.forEach(function(c,i){
-h+='<tr><td style="text-align:center">'+(i+1)+'</td>';
-h+='<td><select class="rv" data-i="'+i+'" onchange="rvChg(this)">'+opts.replace('value="'+c.valor+'"','value="'+c.valor+'" selected')+'</select></td>';
-h+='<td><input type="text" class="rs" data-i="'+i+'" value="'+esc(c.serie)+'" onchange="rsChg(this)"></td>';
-h+='<td><button class="del-row" onclick="rvDel('+i+')" title="Excluir">🗑</button></td></tr>';
+try{
+var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
+method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':API_KEY},
+body:JSON.stringify({contents:[{parts:parts}]})
 });
-h+='</tbody></table>';
-h+='<div class="review-add-row"><select id="rvAV">'+opts.replace('value="50"','value="50" selected')+'</select><input type="text" id="rvAS" placeholder="Nº série"><button onclick="rvAdd()">+ Adicionar</button></div>';
-h+='<h4>Resumo</h4><table id="rvResTbl"><thead><tr><th>Denominação</th><th style="text-align:center">Qtd</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>';
-ks.forEach(function(k){h+='<tr><td>'+fBRL(+k)+'</td><td style="text-align:center">'+m[k].q+'</td><td style="text-align:right">'+fBRL(m[k].s)+'</td></tr>';});
-h+='<tr class="tbl-total"><td><b>TOTAL</b></td><td style="text-align:center"><b>'+tq+'</b></td><td style="text-align:right"><b>'+fBRL(tv)+'</b></td></tr></tbody></table>';
-body.innerHTML=h;document.getElementById('reviewOverlay').classList.remove('hidden');
+var data=await resp.json();
+if(!resp.ok)throw new Error(data.error?.message||'Erro na API');
+var txt=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+txt=txt.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim();
+var result=JSON.parse(txt);
+var seriesExtraidas=result.series||[];
+// Merge with existing cedulas if any
+var existing=lotes[denomAtual.valor].cedulas||[];
+seriesExtraidas.forEach(function(s){
+var found=existing.find(function(e){return e.serie.toUpperCase()===s.numero.toUpperCase();});
+if(found)found.qtd+=s.qtd||1;
+else existing.push({serie:s.numero,qtd:s.qtd||1});
+});
+lotes[denomAtual.valor].cedulas=existing;
+// Save photos to lote
+if(!lotes[denomAtual.valor].fotos)lotes[denomAtual.valor].fotos=[];
+fotos.forEach(function(f){lotes[denomAtual.valor].fotos.push({dataUrl:f.dataUrl});});
+mostrarTabelaValidacao();
+}catch(err){alert('Erro: '+err.message);}
+finally{document.getElementById('cardLoading').classList.add('hidden');document.getElementById('btnExtrair').disabled=false;}
 }
-function toggleBtnPDF(){document.getElementById('btnConfPDF').disabled=!document.getElementById('chkAceite').checked;}
-function rvChg(s){cedulas[+s.dataset.i].valor=+s.value;syncRvRes();}
-function rsChg(inp){cedulas[+inp.dataset.i].serie=inp.value.trim();}
-function rvDel(i){cedulas.splice(i,1);fecharReview();abrirReview();}
-function rvAdd(){var v=+document.getElementById('rvAV').value;var s=document.getElementById('rvAS').value.trim()||'ILEGÍVEL';cedulas.push({valor:v,serie:s});fecharReview();abrirReview();}
-function syncRvRes(){var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;var h='<thead><tr><th>Denominação</th><th style="text-align:center">Qtd</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>';ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;h+='<tr><td>'+fBRL(+k)+'</td><td style="text-align:center">'+m[k].q+'</td><td style="text-align:right">'+fBRL(m[k].s)+'</td></tr>';});h+='<tr class="tbl-total"><td><b>TOTAL</b></td><td style="text-align:center"><b>'+tq+'</b></td><td style="text-align:right"><b>'+fBRL(tv)+'</b></td></tr></tbody>';document.getElementById('rvResTbl').innerHTML=h;}
-function fecharReview(){document.getElementById('reviewOverlay').classList.add('hidden');}
 
-function confirmarPDF(){
-document.querySelectorAll('.rv').forEach(function(s){cedulas[+s.dataset.i].valor=+s.value;});
-document.querySelectorAll('.rs').forEach(function(inp){cedulas[+inp.dataset.i].serie=inp.value.trim();});
-renderDetalhe();renderResumo();fecharReview();enviarLog();gerarPDF();
+/* ===== TABELA VALIDAÇÃO ===== */
+function mostrarTabelaValidacao(){
+showScreen('loteTabela');
+renderLoteTabela();
+}
+function renderLoteTabela(){
+var d=denomAtual,lote=lotes[d.valor];
+var cedulas=lote.cedulas||[];
+var qtdTotal=cedulas.reduce(function(s,c){return s+c.qtd;},0);
+var faltam=lote.qtdInformada-qtdTotal;
+// Alert
+var al=document.getElementById('loteAlerta');
+if(faltam>0)al.innerHTML='<div class="alert alert-warn"><span style="font-size:1.1rem">⚠️</span><span>Encontradas <b>'+qtdTotal+'</b> de <b>'+lote.qtdInformada+'</b>. Faltam <b>'+faltam+'</b>.</span></div>';
+else if(faltam<0)al.innerHTML='<div class="alert alert-err"><span style="font-size:1.1rem">⚠️</span><span>Encontradas <b>'+qtdTotal+'</b>, mas informou <b>'+lote.qtdInformada+'</b>. Excedente de <b>'+Math.abs(faltam)+'</b>.</span></div>';
+else al.innerHTML='<div class="alert alert-ok"><span style="font-size:1.1rem">✅</span><span>Todas as <b>'+lote.qtdInformada+'</b> cédulas conferem!</span></div>';
+// Header
+document.getElementById('loteTabelaHead').innerHTML='<div style="padding:4px 12px;border-radius:6px;font-weight:800;font-size:.85rem;color:#fff;background:'+d.cor+'">'+d.label+'</div><span style="font-size:.82rem;color:var(--gray)">'+qtdTotal+' cédula'+(qtdTotal!==1?'s':'')+'</span>';
+// Table
+var h='<table><thead><tr><th>#</th><th>Nº Série</th><th style="width:60px;text-align:center">Qtd</th><th style="width:36px"></th></tr></thead><tbody>';
+cedulas.forEach(function(c,i){
+h+='<tr><td style="text-align:center;color:#94a3b8">'+(i+1)+'</td>';
+h+='<td><input type="text" value="'+esc(c.serie)+'" onchange="editLoteSerie('+i+',this.value)"></td>';
+h+='<td><input type="number" value="'+c.qtd+'" min="1" style="text-align:center;width:50px" onchange="editLoteQtd('+i+',this.value)"></td>';
+h+='<td><button class="del-row" onclick="delLoteLinha('+i+')">🗑</button></td></tr>';
+});
+h+='<tr class="tbl-total"><td></td><td style="text-align:right"><b>TOTAL</b></td><td style="text-align:center"><b>'+qtdTotal+'</b></td><td></td></tr>';
+h+='</tbody></table>';
+document.getElementById('loteTabelaWrap').innerHTML=h;
+}
+function editLoteSerie(i,v){lotes[denomAtual.valor].cedulas[i].serie=v.trim();renderLoteTabela();}
+function editLoteQtd(i,v){var n=parseInt(v)||1;lotes[denomAtual.valor].cedulas[i].qtd=Math.max(1,n);renderLoteTabela();}
+function delLoteLinha(i){lotes[denomAtual.valor].cedulas.splice(i,1);renderLoteTabela();}
+function addSerieManual(){
+var s=document.getElementById('addSerie').value.trim();
+if(!s){document.getElementById('addSerie').focus();return;}
+var q=parseInt(document.getElementById('addQtd').value)||1;
+var existing=lotes[denomAtual.valor].cedulas.find(function(c){return c.serie.toUpperCase()===s.toUpperCase();});
+if(existing)existing.qtd+=q;
+else lotes[denomAtual.valor].cedulas.push({serie:s,qtd:q});
+document.getElementById('addSerie').value='';document.getElementById('addQtd').value='1';
+renderLoteTabela();
+}
+function confirmarLote(){
+renderHome();
+showScreen('home');
+}
+
+/* ===== CATALOGAÇÃO GERAL ===== */
+function renderCatalog(){
+var body=document.getElementById('catalogBody');body.innerHTML='';
+var keys=Object.keys(lotes).filter(function(v){var l=lotes[v];return l&&l.cedulas&&l.cedulas.length>0;}).sort(function(a,b){return(+a)-(+b);});
+if(keys.length===0){body.innerHTML='<p style="text-align:center;color:var(--gray);padding:20px">Nenhuma cédula catalogada ainda.</p>';return;}
+keys.forEach(function(v){
+var d=getDenom(+v),lote=lotes[v];
+var qLote=lote.cedulas.reduce(function(s,c){return s+c.qtd;},0);
+var sub=qLote*(+v);
+var sec=document.createElement('div');sec.className='cat-section';
+var h='<div class="cat-section-head"><span class="badge" style="background:'+d.cor+'">'+d.label+'</span><span>'+qLote+' cédula'+(qLote!==1?'s':'')+' — Subtotal: '+fBRL(sub)+'</span></div>';
+h+='<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Nº Série</th><th style="text-align:center">Qtd</th><th style="width:36px"></th></tr></thead><tbody>';
+lote.cedulas.forEach(function(c,i){
+h+='<tr><td style="text-align:center;color:#94a3b8">'+(i+1)+'</td>';
+h+='<td><input type="text" value="'+esc(c.serie)+'" onchange="editCatSerie('+v+','+i+',this.value)"></td>';
+h+='<td><input type="number" value="'+c.qtd+'" min="1" style="text-align:center;width:50px" onchange="editCatQtd('+v+','+i+',this.value)"></td>';
+h+='<td><button class="del-row" onclick="delCatLinha('+v+','+i+')">🗑</button></td></tr>';
+});
+h+='</tbody></table></div>';
+sec.innerHTML=h;body.appendChild(sec);
+});
+var t=getTotais();
+document.getElementById('catalogTotal').innerHTML='<div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:800;color:var(--topbar)"><span>TOTAL GERAL</span><span>'+t.cedulas+' cédulas — '+fBRL(t.valor)+'</span></div>';
+}
+function editCatSerie(v,i,val){lotes[v].cedulas[i].serie=val.trim();renderCatalog();}
+function editCatQtd(v,i,val){lotes[v].cedulas[i].qtd=Math.max(1,parseInt(val)||1);renderCatalog();}
+function delCatLinha(v,i){lotes[v].cedulas.splice(i,1);if(lotes[v].cedulas.length===0)delete lotes[v];renderCatalog();}
+
+/* ===== REVISÃO FINAL ===== */
+function abrirRevisao(){
+document.getElementById('chkAceite').checked=false;toggleBtnFinal();
+renderRevisao();
+showScreen('revisao');
+}
+function renderRevisao(){
+var body=document.getElementById('revisaoBody');body.innerHTML='';
+var keys=Object.keys(lotes).filter(function(v){return lotes[v]&&lotes[v].cedulas&&lotes[v].cedulas.length>0;}).sort(function(a,b){return(+a)-(+b);});
+keys.forEach(function(v){
+var d=getDenom(+v),lote=lotes[v];
+var qLote=lote.cedulas.reduce(function(s,c){return s+c.qtd;},0);
+var sub=qLote*(+v);
+var h='<div style="margin-bottom:18px">';
+h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="background:'+d.cor+';color:#fff;padding:4px 12px;border-radius:6px;font-weight:800;font-size:.85rem">'+d.label+'</span>';
+h+='<span style="font-size:.82rem;color:var(--topbar);font-weight:600">'+qLote+' cédula'+(qLote!==1?'s':'')+' — '+fBRL(sub)+'</span></div>';
+h+='<table><thead><tr><th>#</th><th>Nº Série</th><th style="text-align:center">Qtd</th></tr></thead><tbody>';
+lote.cedulas.forEach(function(c,i){h+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+esc(c.serie)+'</td><td style="text-align:center">'+c.qtd+'</td></tr>';});
+h+='</tbody></table></div>';
+body.innerHTML+=h;
+});
+var t=getTotais();
+body.innerHTML+='<div style="border-top:2px solid var(--topbar);padding-top:10px;margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:800;color:var(--topbar)"><span>TOTAL</span><span>'+t.cedulas+' cédulas — '+fBRL(t.valor)+'</span></div></div>';
+}
+function toggleBtnFinal(){
+var ok=document.getElementById('chkAceite').checked;
+document.getElementById('btnGerarPDF').disabled=!ok;
+document.getElementById('btnGerarDOCX').disabled=!ok;
 }
 
 /* ===== LOG ===== */
 function enviarLog(){
-var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
-var ks=Object.keys(m),tq=0,tv=0;ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;});
-var payload={nome:usuario.nome,matricula:usuario.matricula,unidade:unidadeSel.sigla==='OUTROS'?'OUTROS':unidadeSel.sigla,qtdCedulas:tq,valorTotal:tv.toFixed(2)};
+var t=getTotais();
+var payload={nome:usuario.nome,matricula:usuario.matricula,unidade:unidadeSel.sigla==='OUTROS'?'OUTROS':unidadeSel.sigla,qtdCedulas:t.cedulas,valorTotal:t.valor.toFixed(2)};
 try{navigator.sendBeacon(LOG_URL,JSON.stringify(payload));}catch(e){fetch(LOG_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)}).catch(function(){});}
 }
 
 /* ===== PDF ===== */
 function gerarPDF(){
+enviarLog();
 var now=new Date(),ds=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 var uNome=unidadeSel.sigla==='OUTROS'?'Polícia Federal':unidadeSel.nome;
 var uEnd=unidadeSel.end||'';
 var uSigla=unidadeSel.sigla==='OUTROS'?'':unidadeSel.sigla;
-var m={};cedulas.forEach(function(c){var v=c.valor;if(!m[v])m[v]={q:0,s:0};m[v].q++;m[v].s+=v;});
-var ks=Object.keys(m).sort(function(a,b){return a-b;}),tq=0,tv=0;ks.forEach(function(k){tq+=m[k].q;tv+=m[k].s;});
-var dr='';cedulas.forEach(function(c,i){dr+='<tr><td style="text-align:center">'+(i+1)+'</td><td style="text-align:right">'+fBRL(c.valor)+'</td><td>'+esc(c.serie)+'</td></tr>';});
-var sr='';ks.forEach(function(k){sr+='<tr><td>'+fBRL(+k)+'</td><td style="text-align:center">'+m[k].q+'</td><td style="text-align:right">'+fBRL(m[k].s)+'</td></tr>';});
-var ph='';fotos.forEach(function(f,i){ph+='<div style="display:inline-block;margin:6px;vertical-align:top;text-align:center"><img src="'+f.dataUrl+'" style="max-width:240px;max-height:200px;border:1px solid #ccc;border-radius:4px"><br><small style="color:#666">Foto '+(i+1)+'</small></div>';});
 var subLine=uNome+(uSigla?' ('+uSigla+')':'');
-var addrLine=uEnd?'<br><span style="font-size:10px">'+esc(uEnd)+'</span>':'';
+var keys=Object.keys(lotes).filter(function(v){return lotes[v]&&lotes[v].cedulas&&lotes[v].cedulas.length>0;}).sort(function(a,b){return(+a)-(+b);});
+var sections='';
+keys.forEach(function(v){
+var d=getDenom(+v),lote=lotes[v];
+var qLote=lote.cedulas.reduce(function(s,c){return s+c.qtd;},0);
+var sub=qLote*(+v);
+sections+='<h2 style="color:'+d.cor+'">'+d.label+' — '+qLote+' cédula'+(qLote!==1?'s':'')+' — Subtotal: '+fBRL(sub)+'</h2>';
+sections+='<table><thead><tr><th style="width:40px;text-align:center">#</th><th>Nº Série</th><th style="width:80px;text-align:center">Qtd</th></tr></thead><tbody>';
+lote.cedulas.forEach(function(c,i){sections+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+esc(c.serie)+'</td><td style="text-align:center">'+c.qtd+'</td></tr>';});
+sections+='</tbody></table>';
+if(lote.fotos&&lote.fotos.length>0){
+sections+='<div style="margin:8px 0 16px">';
+lote.fotos.forEach(function(f,i){sections+='<div style="display:inline-block;margin:4px;vertical-align:top;text-align:center"><img src="'+f.dataUrl+'" style="max-width:220px;max-height:180px;border:1px solid #ccc;border-radius:4px"><br><small style="color:#666">Foto '+(i+1)+'</small></div>';});
+sections+='</div>';
+}
+});
+var t=getTotais();
+var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Cédulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total-box{margin-top:16px;padding:12px;background:#f1f5f9;border:2px solid #1e3a5f;border-radius:6px;text-align:center;font-size:14px;font-weight:700;color:#1e3a5f}.footer{margin-top:24px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:10px}thead{display:table-header-group}h2{page-break-after:avoid}tr{page-break-inside:avoid}</style></head><body>';
 
-var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Cédulas</title><style>@media print{@page{margin:15mm 12mm;size:A4}}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#1e293b;padding:20px;font-size:12px;line-height:1.4}h1{font-size:16px;text-align:center;color:#1e3a5f;margin-bottom:2px}.sub{text-align:center;color:#1e3a5f;font-size:11px;margin-bottom:2px;font-weight:600}.sub2{text-align:center;color:#64748b;font-size:10px;margin-bottom:4px}.srv{text-align:center;font-size:10px;color:#1e293b;margin-bottom:16px;padding:6px;background:#f1f5f9;border-radius:4px}h2{font-size:13px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:18px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #e2e8f0}.total td{font-weight:700;background:#f1f5f9;border-top:2px solid #1e3a5f}.photos{margin-top:12px}.photos div{page-break-inside:avoid}.footer{margin-top:24px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:10px;line-height:1.6}thead{display:table-header-group}h2{page-break-after:avoid}tr{page-break-inside:avoid}</style></head><body>';
-html+='<h1>CATALOGAÇÃO DE CÉDULAS APREENDIDAS</h1>';
-html+='<p class="sub">'+esc(subLine)+'</p>';
-html+='<p class="sub2">'+addrLine+'<br>'+ds+'</p>';
-html+='<div class="srv">Servidor: <b>'+esc(usuario.nome)+'</b> — Matrícula: <b>'+esc(usuario.matricula)+'</b></div>';
-html+='<h2>Tabela Detalhada</h2><table><thead><tr><th style="width:40px;text-align:center">#</th><th style="width:110px;text-align:right">Valor</th><th>Série</th></tr></thead><tbody>'+dr+'</tbody></table>';
-html+='<h2>Resumo por Denominação</h2><table><thead><tr><th>Denominação</th><th style="text-align:center">Qtd</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>'+sr+'<tr class="total"><td><b>TOTAL</b></td><td style="text-align:center"><b>'+tq+'</b></td><td style="text-align:right"><b>'+fBRL(tv)+'</b></td></tr></tbody></table>';
-html+='<h2>Imagens das Cédulas</h2><div class="photos">'+ph+'</div>';
-html+='<div class="footer">';
-html+='Documento emitido por <b>'+esc(usuario.nome)+'</b> (Mat. '+esc(usuario.matricula)+') após conferência e validação dos dados.<br>';
-html+='As informações contidas neste relatório foram revisadas e confirmadas pelo servidor responsável.<br>';
-html+='Nenhuma imagem ou dado foi armazenado em servidor. Processamento realizado localmente.';
-html+='</div>';
-html+='<script>window.onload=function(){window.print();}<\/script></body></html>';
-
-var blob=new Blob([html],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);
-var w=window.open(url,'_blank');if(!w)alert('Permita pop-ups para gerar o PDF.');
+html+=’<h1>CATALOGAÇÃO DE CÉDULAS APREENDIDAS</h1>’;
+html+=’<p class="sub">’+esc(subLine)+’</p>’;
+if(uEnd)html+=’<p class="sub2">’+esc(uEnd)+’</p>’;
+html+=’<p class="sub2">’+ds+’</p>’;
+html+=’<div class="srv">Servidor: <b>’+esc(usuario.nome)+’</b> — Matrícula: <b>’+esc(usuario.matricula)+’</b></div>’;
+html+=sections;
+html+=’<div class="total-box">TOTAL GERAL: ‘+t.cedulas+’ cédulas — ‘+fBRL(t.valor)+’</div>’;
+html+=’<div class="footer">Documento emitido por ‘+esc(usuario.nome)+’ (Mat. ‘+esc(usuario.matricula)+’) após conferência e validação dos dados.<br>As informações foram revisadas e confirmadas pelo servidor responsável.<br>Nenhuma imagem ou dado foi armazenado em servidor.</div>’;
+html+=’<script>window.onload=function(){window.print();}</script></body></html>’;
+var blob=new Blob([html],{type:‘text/html;charset=utf-8’});
+var url=URL.createObjectURL(blob);
+var w=window.open(url,’_blank’);
+if(!w)alert(‘Permita pop-ups para gerar o PDF.’);
 setTimeout(function(){URL.revokeObjectURL(url);},60000);
 }
 
-/* ===== RESET ===== */
-function novaAnalise(){if(!confirm('Limpar tudo e iniciar nova análise?'))return;fotos=[];cedulas=[];renderFotos();document.getElementById('cardResultado').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+/* ===== DOCX ===== */
+async function gerarDOCX(){
+enviarLog();
+var D=window.docx;
+var now=new Date(),ds=now.toLocaleDateString(‘pt-BR’)+’ ‘+now.toLocaleTimeString(‘pt-BR’,{hour:‘2-digit’,minute:‘2-digit’});
+var uNome=unidadeSel.sigla===‘OUTROS’?‘Polícia Federal’:unidadeSel.nome;
+var uEnd=unidadeSel.end||’’;
+var uSigla=unidadeSel.sigla===‘OUTROS’?’’:unidadeSel.sigla;
+var subLine=uNome+(uSigla?’ (’+uSigla+’)’:’’);
+var keys=Object.keys(lotes).filter(function(v){return lotes[v]&&lotes[v].cedulas&&lotes[v].cedulas.length>0;}).sort(function(a,b){return(+a)-(+b);});
+var children=[];
+// Header
+children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:‘CATALOGAÇÃO DE CÉDULAS APREENDIDAS’,bold:true,size:28,font:‘Segoe UI’})]}));
+children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:40},children:[new D.TextRun({text:subLine,size:20,font:‘Segoe UI’})]}));
+if(uEnd)children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:40},children:[new D.TextRun({text:uEnd,size:16,color:‘666666’,font:‘Segoe UI’})]}));
+children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:80},children:[new D.TextRun({text:ds,size:16,color:‘666666’,font:‘Segoe UI’})]}));
+children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{after:200},shading:{fill:‘F1F5F9’},children:[new D.TextRun({text:’Servidor: ‘+usuario.nome+’ — Matrícula: ’+usuario.matricula,size:18,font:‘Segoe UI’})]}));
+// Sections per denomination
+keys.forEach(function(v){
+var d=getDenom(+v),lote=lotes[v];
+var qLote=lote.cedulas.reduce(function(s,c){return s+c.qtd;},0);
+var sub=qLote*(+v);
+children.push(new D.Paragraph({spacing:{before:300,after:100},border:{bottom:{style:D.BorderStyle.SINGLE,size:2,color:‘1E3A5F’}},children:[new D.TextRun({text:d.label+’ — ‘+qLote+’ cédula’+(qLote!==1?‘s’:’’)+’ — Subtotal: ‘+fBRL(sub),bold:true,size:22,font:‘Segoe UI’,color:‘1E3A5F’})]}));
+// Table
+var rows=[];
+rows.push(new D.TableRow({tableHeader:true,children:[
+new D.TableCell({width:{size:800,type:D.WidthType.DXA},shading:{fill:‘1E3A5F’},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:’#’,bold:true,color:‘FFFFFF’,size:18,font:‘Segoe UI’})]})]}),
+new D.TableCell({shading:{fill:‘1E3A5F’},children:[new D.Paragraph({children:[new D.TextRun({text:‘Nº Série’,bold:true,color:‘FFFFFF’,size:18,font:‘Segoe UI’})]})]}),
+new D.TableCell({width:{size:1200,type:D.WidthType.DXA},shading:{fill:‘1E3A5F’},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:‘Qtd’,bold:true,color:‘FFFFFF’,size:18,font:‘Segoe UI’})]})]})
+]}));
+lote.cedulas.forEach(function(c,i){
+rows.push(new D.TableRow({children:[
+new D.TableCell({width:{size:800,type:D.WidthType.DXA},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:’’+(i+1),size:18,font:‘Segoe UI’,color:‘999999’})]})]}),
+new D.TableCell({children:[new D.Paragraph({children:[new D.TextRun({text:c.serie,size:18,font:‘Segoe UI’})]})]}),
+new D.TableCell({width:{size:1200,type:D.WidthType.DXA},children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:’’+c.qtd,size:18,font:‘Segoe UI’})]})]})
+]}));
+});
+children.push(new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},rows:rows}));
+// Photos
+if(lote.fotos&&lote.fotos.length>0){
+children.push(new D.Paragraph({spacing:{before:100,after:40},children:[new D.TextRun({text:‘Imagens do lote:’,italics:true,size:16,color:‘666666’,font:‘Segoe UI’})]}));
+lote.fotos.forEach(function(f,fi){
+try{
+var b64=f.dataUrl.split(’,’)[1];
+var raw=atob(b64);var arr=new Uint8Array(raw.length);for(var j=0;j<raw.length;j++)arr[j]=raw.charCodeAt(j);
+var mime=f.dataUrl.split(’;’)[0].split(’:’)[1]||‘image/jpeg’;
+var ext=mime.indexOf(‘png’)>=0?‘png’:‘jpg’;
+children.push(new D.Paragraph({spacing:{after:80},children:[
+new D.ImageRun({data:arr,transformation:{width:280,height:210},type:ext}),
+new D.TextRun({text:’  Foto ’+(fi+1),size:14,color:‘999999’,font:‘Segoe UI’})
+]}));
+}catch(e){}
+});
+}
+});
+// Total
+var t=getTotais();
+children.push(new D.Paragraph({spacing:{before:300},border:{top:{style:D.BorderStyle.SINGLE,size:3,color:‘1E3A5F’}},alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:‘TOTAL GERAL: ‘+t.cedulas+’ cédulas — ‘+fBRL(t.valor),bold:true,size:24,font:‘Segoe UI’,color:‘1E3A5F’})]}));
+// Footer
+children.push(new D.Paragraph({spacing:{before:400},alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:‘Documento emitido por ‘+usuario.nome+’ (Mat. ‘+usuario.matricula+’) após conferência e validação dos dados.’,size:14,color:‘999999’,font:‘Segoe UI’})]}));
+children.push(new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:‘Nenhuma imagem ou dado foi armazenado em servidor.’,size:14,color:‘999999’,font:‘Segoe UI’})]}));
+var doc=new D.Document({sections:[{properties:{page:{margin:{top:1000,bottom:1000,left:1000,right:1000}}},children:children}]});
+try{
+var blob=await D.Packer.toBlob(doc);
+saveAs(blob,‘Catalogacao_Cedulas_’+now.toISOString().slice(0,10)+’.docx’);
+}catch(err){alert(’Erro ao gerar DOCX: ’+err.message);}
+}
+
+/* ===== NOVA ANÁLISE ===== */
+function novaAnalise(){if(!confirm(‘Limpar tudo e iniciar nova análise?’))return;lotes={};fotos=[];renderHome();showScreen(‘home’);}
 </script>
+
 </body>
 </html>
